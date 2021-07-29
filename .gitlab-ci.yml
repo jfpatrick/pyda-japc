@@ -1,0 +1,41 @@
+# Use the acc-py-devtools templates found at
+# https://gitlab.cern.ch/-/ide/project/acc-co/devops/python/acc-py-devtools/blob/master/-/acc_py_devtools/templates/gitlab-ci/python.yml.
+include:
+ - project: acc-co/devops/python/acc-py-devtools
+   file: acc_py_devtools/templates/gitlab-ci/python.yml
+
+variables:
+  project_name: pyda_japc
+  PY_VERSION: '3.7'
+
+  ACCSOFT_DS_MODEL_REPO:
+    value: "acc-co/devops/python/prototypes/accsoft-ds-model-py"
+    description: "The repo project name for pyds-model"
+
+  ACCSOFT_DS_MODEL_REF:
+    value: "master"
+    description: "The ref to use from $ACCSOFT_DS_MODEL_REPO to test against."
+
+
+# A development installation of pyda-japc tested with pytest.
+test_dev:
+  extends: .acc_py_dev_test
+  stage: test
+  image: condaforge/mambaforge
+  before_script:
+    - mamba create --yes -p ./env python=3.7 openjdk=11
+    - source activate ./env
+    - pip install --find-links=./wheelhouse/ pyds-model
+    - pip install -e .[test] pytest-cov
+  needs:
+    - project: "${ACCSOFT_DS_MODEL_REPO}"
+      job: build_wheel
+      ref: "${ACCSOFT_DS_MODEL_REF}"
+      artifacts: true
+
+
+# A push of the source distribution to the acc-py PyPI, only on git tag.
+release_sdist_on_tag:
+  extends: .acc_py_release_sdist
+
+
