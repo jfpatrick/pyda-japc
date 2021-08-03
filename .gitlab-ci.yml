@@ -22,6 +22,8 @@ test_dev:
   extends: .acc_py_dev_test
   stage: test
   image: condaforge/mambaforge
+  variables:
+    PYTEST_ADDOPTS: "-p no:faulthandler"
   before_script:
     - mamba create --yes -p ./env python=3.7 openjdk=11
     - source activate ./env
