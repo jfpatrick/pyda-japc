@@ -30,6 +30,7 @@ def japc_mock(jvm):
         verify = org.mockito.Mockito.verify
         newSuperCycle = cern.japc.ext.mockito.JapcMock.newSuperCycle
 
+    Implementation: https://gitlab.cern.ch/acc-co/japc/japc-core/-/blob/master/japc-ext-mockito/src/java/cern/japc/ext/mockito/JapcMock.java#L61
     """
     mock = jp.JPackage("cern").japc.ext.mockito.JapcMock
 
