@@ -3,16 +3,6 @@ import jpype as jp
 import pytest
 
 
-def pytest_cmdline_preparse(config, args):
-    # This hook is technically deprecated, but there is no equivalent behaviour.
-    # See https://github.com/pytest-dev/pytest/issues/5024 for discussion and
-    # follow-up.
-
-    # Add the no:faulthandler to avoid SIGSEGV at pytest cleanup (as a result of
-    # bad interactions with JPype).
-    args.extend(['-p', 'no:faulthandler'])
-
-
 @pytest.fixture
 def jvm() -> None:
     mgr = cmmnbuild_dep_manager.Manager()
