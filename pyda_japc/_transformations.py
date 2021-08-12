@@ -5,6 +5,8 @@ import jpype as jp
 import typing
 import pyds_model._ds_model as _ds_model  # TODO: Only use public classes.
 
+from ._dm_helpers import setter_for_type as _setter_for_type
+
 
 if typing.TYPE_CHECKING:
     cern = jp.JPackage("cern")
@@ -42,45 +44,6 @@ def ValueType_to_BasicType(value_type: "cern.japc.value.ValueType") -> _ds_model
     return basic_type_lookup[value_type]
 
 
-def _getter_setter_for_type(basic_type: _ds_model.BasicType, array_rank=0):
-    """
-    Return the unbound methods for getting and setting to the given type on :class:`AnyData`.
-
-    """
-    t = _ds_model.BasicType
-    if array_rank not in [0, 1, 2]:
-        raise ValueError("Array rank must be 0, 1 or 2")
-    type_to_name = {
-        t.STRING: "str",
-        t.BOOL: "bool",
-
-        t.FLOAT: "float",
-        t.DOUBLE: "double",
-
-        t.INT8: "int8",
-        t.INT16: "int16",
-        t.INT32: "int32",
-        t.INT64: "int64",
-
-        t.UINT8: "uint8",
-        t.UINT16: "uint16",
-        t.UINT32: "uint32",
-        t.UINT64: "uint64",
-    }
-    if basic_type not in type_to_name:
-        raise TypeError(f"Unhandled type {basic_type}")
-    if array_rank == 0:
-        rank_suffix = ''
-    elif array_rank == 1:
-        rank_suffix = '_array'
-    elif array_rank == 2:
-        rank_suffix = '_array_2D'
-
-    getter_name = f'get_{type_to_name[basic_type]}{rank_suffix}'
-    setter_name = f'set_{type_to_name[basic_type]}{rank_suffix}'
-    return getattr(_ds_model.AnyData, getter_name), getattr(_ds_model.AnyData, setter_name)
-
-
 def MapParameterValue_to_DataTypeValue(param_value: "cern.japc.value.MapParameterValue") -> _ds_model.DataTypeValue:
     # Build a device class and property so that we can get hold of an empty
     # DataType instance (no better way currently).
@@ -105,6 +68,8 @@ def MapParameterValue_to_DataTypeValue(param_value: "cern.japc.value.MapParamete
 
     # Create a DataTypeValue for the DataType we have just built-up.
     data = dtype.create_empty_value(accepts_partial=True)
+
+    # data = _ds_model.AnyData.create()
     for name in param_value.getNames():
         value: cern.japc.value.SimpleParameterValue = param_value.get(name)
         value_type = value.getValueType()
@@ -124,7 +89,7 @@ def MapParameterValue_to_DataTypeValue(param_value: "cern.japc.value.MapParamete
         actual_value = value.getObject()
 
         # Set the data using the correct method.
-        setter = _getter_setter_for_type(basic_type, array_rank)[1]
-        setter(data, name, actual_value)
+        setter = _setter_for_type(data, basic_type, array_rank)
+        setter(name, actual_value)
 
     return data

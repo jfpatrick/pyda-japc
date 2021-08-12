@@ -1,7 +1,10 @@
 import jpype as jp
 import pyds_model._ds_model as _ds_model  # TODO: No private access.
-import pyda_japc._transformations as trans
 import pytest
+
+import pyda_japc._transformations as trans
+from pyda_japc._dm_helpers import getter_for_type
+
 
 
 @pytest.mark.parametrize(
@@ -32,16 +35,14 @@ def test_value_type_to_basic_type_missing(jvm):
 def test_mapparametervalue_to_datatypevalue_multiple_values(japc_mock):
     japc_value = jp.JPackage("cern").japc.value.spi.value
     mpv = japc_mock.mpv(
-        ['a_byte', 'a_short', 'an_int', 'a_double'], [
+        ['a_byte', 'a_short'], [
             japc_value.simple.ByteValue(127),
             japc_value.simple.ShortValue(2),
-            japc_value.simple.IntValue(-2),
-            japc_value.simple.DoubleValue(3.14),
         ]
     )
     result = trans.MapParameterValue_to_DataTypeValue(mpv)
     assert isinstance(result, _ds_model.DataTypeValue)
-    assert result.entry_names() == {'a_byte', 'a_short', 'an_int', 'a_double'}
+    assert result.entry_names() == {'a_byte', 'a_short'}
     assert result.get_type('a_byte') == _ds_model.BasicType.INT8
     assert result.get_int8('a_byte') == 127
     assert result.get_type('a_short') == _ds_model.BasicType.INT16
@@ -67,8 +68,9 @@ def test_mapparametervalue_to_datatypevalue__specific_types(japc_mock, simple_va
 
     mpv = japc_mock.mpv(['a_name'], [jvalue])
     result = trans.MapParameterValue_to_DataTypeValue(mpv)
+    assert isinstance(result, _ds_model.DataTypeValue)
     assert result.contains('a_name')
     expected_type = getattr(_ds_model.BasicType, expected_type_name)
     assert result.get_type('a_name') == expected_type
-    value_getter = trans._getter_setter_for_type(expected_type)[0]
-    assert value_getter(result, 'a_name') == value
+    value_getter = getter_for_type(result, expected_type, array_rank=0)
+    assert value_getter('a_name') == value
