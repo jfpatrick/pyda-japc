@@ -235,3 +235,62 @@ def test_datatypevalue_to_mapparametervalue__specific_2d_array_types(datatype, j
     arr2d = result.getObject('a_name')
     recorded_arr = np.array(arr2d.getArray1D(), dtype=value.dtype).reshape(arr2d.getRowCount(), arr2d.getColumnCount())
     numpy.testing.assert_array_equal(recorded_arr, value)
+
+
+@pytest.mark.parametrize(
+    ["selector"],
+    [
+        ('some.selector.here', ),
+        ('', ),
+    ],
+)
+def test_valueheader_to_context__SettingImmediateUpdateHeader(jvm, selector):
+    vhf = jp.JPackage("cern").japc.core.factory.ValueHeaderFactory
+    header = vhf.newSettingImmediateUpdateHeader(selector)
+
+    ctx, notification_type = trans.ValueHeader_to_ctx_notif_pair(header)
+    assert isinstance(ctx, model.SettingContext)
+    assert notification_type == 'SETTING_UPDATE'
+    if selector:
+        assert ctx.selector == selector
+    else:
+        # A context with a "no selector" raises an attribute error when you
+        # try to access it. This may or may not be the behaviour we want.
+        with pytest.raises(AttributeError):
+            ctx.selector
+
+
+def test_valueheader_to_context__SettingFirstUpdateHeader(jvm):
+    vhf = jp.JPackage("cern").japc.core.factory.ValueHeaderFactory
+    header = vhf.newSettingFirstUpdateHeader(21312, 13, 'some.selector.here')
+    ctx, notification_type = trans.ValueHeader_to_ctx_notif_pair(header)
+    assert isinstance(ctx, model.SettingContext)
+    assert notification_type == 'FIRST_UPDATE'
+
+
+def test_valueheader_to_context__SettingImmediateFirstUpdateHeader_cycle_bound_no_set(jvm):
+    vhf = jp.JPackage("cern").japc.core.factory.ValueHeaderFactory
+    header = vhf.newSettingImmediateUpdateHeader(21312, 1322313, 'some.selector.here')
+    ctx, notification_type = trans.ValueHeader_to_ctx_notif_pair(header)
+    assert isinstance(ctx, model.MultiplexedSettingContext)
+    assert notification_type == 'SETTING_UPDATE'
+    assert ctx.selector == 'some.selector.here'
+    assert ctx.set_stamp == 1322313
+    assert ctx.acq_stamp == 21312
+
+
+def test_valueheader_to_context__AcquisitionRegularUpdateHeader_cycle_bound(jvm):
+    vhf = jp.JPackage("cern").japc.core.factory.ValueHeaderFactory
+    header = vhf.newAcquisitionRegularUpdateHeader(21312, 123, 'some.selector.here')
+    ctx, notification_type = trans.ValueHeader_to_ctx_notif_pair(header)
+    assert isinstance(ctx, model.CycleBoundAcquisitionContext)
+    assert notification_type == 'SETTING_UPDATE'
+    assert ctx.cycle_stamp == 123
+
+
+def test_valueheader_to_context__AcquisitionRegularUpdateHeader_cycle_bound_no_set_stamp(jvm):
+    vhf = jp.JPackage("cern").japc.core.factory.ValueHeaderFactory
+    header = vhf.newAcquisitionRegularUpdateHeader(21312, 0, 'some.selector.here')
+    ctx, notification_type = trans.ValueHeader_to_ctx_notif_pair(header)
+    assert isinstance(ctx, model.AcquisitionContext)
+    assert notification_type == 'SETTING_UPDATE'

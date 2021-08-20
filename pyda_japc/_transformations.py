@@ -86,6 +86,7 @@ def MapParameterValue_to_DataTypeValue(param_value: "cern.japc.value.MapParamete
         dtype.create_basic_item(name, basic_type, rank=array_rank)
 
     # Create a DataTypeValue for the DataType we have just built-up.
+    # TODO: How to determine partial-ness. Is that entirely from CCDB?
     data = dtype.create_empty_value(accepts_partial=True)
 
     cern = jp.JPackage("cern")
@@ -127,3 +128,47 @@ def DataTypeValue_to_MapParameterValue(dtv: model.DataTypeValue) -> "cern.japc.v
             spv = cern.japc.core.factory.SimpleParameterValueFactory.newValue(jval)
         mpv.put(name, spv)
     return mpv
+
+
+def ValueHeader_to_ctx_notif_pair(
+        header: "cern.japc.core.ValueHeader"
+) -> typing.Tuple[model.AnyContext, str]:
+    # TODO: The logic in this function to be reviewed by a DSF & JAPC expert.
+
+    if header.isFirstUpdate():
+        # TODO: Use the Enum from DSF for this once mapped.
+        notification_type = 'FIRST_UPDATE'
+    else:
+        # TOOD: We need to be more nuanced than this. It could equally be SERVER_UPDATE.
+        notification_type = 'SETTING_UPDATE'
+
+    acq_stamp = int(header.getAcqStamp())
+    set_stamp = int(header.getSetStamp())
+
+    selector = header.getSelector().getId()
+    has_selector = selector != ''
+
+    if not has_selector:
+        if set_stamp == 0:
+            context = model.AcquisitionContext(
+                acq_stamp=acq_stamp,
+            )
+        else:
+            context = model.SettingContext(
+                acq_stamp=acq_stamp,
+                set_stamp=set_stamp,
+            )
+    else:
+        if set_stamp == 0:
+            context = model.CycleBoundAcquisitionContext(
+                acq_stamp=acq_stamp,
+                selector=selector,
+                cycle_stamp=int(header.getCycleStamp()),
+            )
+        else:
+            context = model.MultiplexedSettingContext(
+                acq_stamp=acq_stamp,
+                selector=selector,
+                set_stamp=set_stamp,
+            )
+    return context, notification_type
