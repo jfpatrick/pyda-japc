@@ -3,9 +3,11 @@ import warnings
 
 import jpype as jp
 import typing
+
+import numpy as np
 import pyds_model._ds_model as _ds_model  # TODO: Only use public classes.
 
-from ._dm_helpers import setter_for_type as _setter_for_type
+from . import _jpype_tools
 
 
 if typing.TYPE_CHECKING:
@@ -69,7 +71,6 @@ def MapParameterValue_to_DataTypeValue(param_value: "cern.japc.value.MapParamete
     # Create a DataTypeValue for the DataType we have just built-up.
     data = dtype.create_empty_value(accepts_partial=True)
 
-    # data = _ds_model.AnyData.create()
     for name in param_value.getNames():
         value: cern.japc.value.SimpleParameterValue = param_value.get(name)
         value_type = value.getValueType()
@@ -85,11 +86,12 @@ def MapParameterValue_to_DataTypeValue(param_value: "cern.japc.value.MapParamete
             warnings.warn(f'Array support not implemented for {name} (type: {value_type})')
             continue
 
-        basic_type = ValueType_to_BasicType(value_type.getComponentType())
         actual_value = value.getObject()
-
-        # Set the data using the correct method.
-        setter = _setter_for_type(data, basic_type, array_rank)
-        setter(name, actual_value)
-
+        if isinstance(actual_value, str):
+            # JPype already converts java strings to python strings for us.
+            pass
+        else:
+            # We need to special case scalars because of https://github.com/jpype-project/jpype/issues/997.
+            actual_value = _jpype_tools.jscalar_to_scalar(actual_value)
+        data[name] = actual_value
     return data

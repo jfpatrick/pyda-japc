@@ -3,8 +3,6 @@ import pyds_model._ds_model as _ds_model  # TODO: No private access.
 import pytest
 
 import pyda_japc._transformations as trans
-from pyda_japc._dm_helpers import getter_for_type
-
 
 
 @pytest.mark.parametrize(
@@ -44,9 +42,9 @@ def test_mapparametervalue_to_datatypevalue_multiple_values(japc_mock):
     assert isinstance(result, _ds_model.DataTypeValue)
     assert result.entry_names() == {'a_byte', 'a_short'}
     assert result.get_type('a_byte') == _ds_model.BasicType.INT8
-    assert result.get_int8('a_byte') == 127
+    assert result['a_byte'] == 127
     assert result.get_type('a_short') == _ds_model.BasicType.INT16
-    assert result.get_int16('a_short') == 2
+    assert result['a_short'] == 2
 
 
 @pytest.mark.parametrize(
@@ -72,5 +70,5 @@ def test_mapparametervalue_to_datatypevalue__specific_types(japc_mock, simple_va
     assert result.contains('a_name')
     expected_type = getattr(_ds_model.BasicType, expected_type_name)
     assert result.get_type('a_name') == expected_type
-    value_getter = getter_for_type(result, expected_type, array_rank=0)
-    assert value_getter('a_name') == value
+    assert result['a_name'] == value
+
