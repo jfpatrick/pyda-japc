@@ -40,7 +40,7 @@ def test_mapparametervalue_to_datatypevalue_multiple_values(japc_mock):
     )
     result = trans.MapParameterValue_to_DataTypeValue(mpv)
     assert isinstance(result, _ds_model.DataTypeValue)
-    assert result.entry_names() == {'a_byte', 'a_short'}
+    assert result.keys() == {'a_byte', 'a_short'}
     assert result.get_type('a_byte') == _ds_model.BasicType.INT8
     assert result['a_byte'] == 127
     assert result.get_type('a_short') == _ds_model.BasicType.INT16
@@ -67,7 +67,7 @@ def test_mapparametervalue_to_datatypevalue__specific_types(japc_mock, simple_va
     mpv = japc_mock.mpv(['a_name'], [jvalue])
     result = trans.MapParameterValue_to_DataTypeValue(mpv)
     assert isinstance(result, _ds_model.DataTypeValue)
-    assert result.contains('a_name')
+    assert 'a_name' in result
     expected_type = getattr(_ds_model.BasicType, expected_type_name)
     assert result.get_type('a_name') == expected_type
     assert result['a_name'] == value
