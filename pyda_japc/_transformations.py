@@ -5,6 +5,7 @@ import warnings
 import jpype as jp
 import numpy as np
 import pyds_model as model
+import pyds_model.client
 
 from . import _jpype_tools
 
@@ -172,3 +173,11 @@ def ValueHeader_to_ctx_notif_pair(
                 set_stamp=set_stamp,
             )
     return context, notification_type
+
+
+def AcquiredParameterValue_to_AcquiredDataTypeValue(
+        apv: "cern.japc.core.AcquiredParameterValue"
+) -> pyds_model.client.AcquiredDataTypeValue:
+    context, notification_type = ValueHeader_to_ctx_notif_pair(apv.getHeader())
+    value = MapParameterValue_to_DataTypeValue(apv.getValue())
+    return pyds_model.client.AcquiredDataTypeValue(value, context, notification_type)

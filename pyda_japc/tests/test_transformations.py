@@ -1,8 +1,9 @@
 import jpype as jp
-import pyds_model as model
-import pytest
 import numpy as np
 import numpy.testing
+import pyds_model as model
+import pyds_model.client
+import pytest
 
 import pyda_japc._transformations as trans
 
@@ -294,3 +295,17 @@ def test_valueheader_to_context__AcquisitionRegularUpdateHeader_cycle_bound_no_s
     ctx, notification_type = trans.ValueHeader_to_ctx_notif_pair(header)
     assert isinstance(ctx, model.AcquisitionContext)
     assert notification_type == 'SETTING_UPDATE'
+
+
+def test_acqvalue_to_acqvalue(japc_mock: "cern.japc.ext.mockito.JapcMock"):
+    vhf = jp.JPackage("cern").japc.core.factory.ValueHeaderFactory
+
+    param = japc_mock.mockParameter('ff')
+    header = vhf.newAcquisitionRegularUpdateHeader(21312, 0, 'some.selector.here')
+    j_acq = japc_mock.apv(param, header, 123)
+
+    acq = trans.AcquiredParameterValue_to_AcquiredDataTypeValue(j_acq)
+    assert isinstance(acq, pyds_model.client.AcquiredDataTypeValue)
+    assert acq['value'] == 123
+    assert acq.context.acq_stamp == 21312
+    assert acq.context.selector == 'some.selector.here'
