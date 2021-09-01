@@ -105,13 +105,13 @@ def test_mapparametervalue_to_datatypevalue__specific_1d_array_types(japc_mock, 
     ["simple_value_type", "expected_type_name", "value"],
     [
         ("BooleanArrayValue", "BOOL", np.array([[True, False], [False, True]], dtype=np.bool)),
-        ("ByteArrayValue", "INT8", np.array([[127, 0], [1, -3]], dtype=np.int8)),
-        ("ShortArrayValue", "INT16", np.array([[135, 234], [1, 2]], dtype=np.int16)),
-        ("IntArrayValue", "INT32", np.array([[135, 234], [1, 2]], dtype=np.int32)),
-        ("LongArrayValue", "INT64", np.array([[135, 234], [1, 2]], dtype=np.int64)),
-        ("FloatArrayValue", "FLOAT", np.array([[3.140000104904175, 0.5], [1.0, 1.1]], dtype=np.float32)),  # We lack precision when re-creating the Python float from float32.
-        ("DoubleArrayValue", "DOUBLE", np.array([[3.14, 0.5], [1.0, 1.1]], dtype=np.float64)),
-        ("StringArrayValue", "STRING", np.array([["Hello world! ✓", "Goodbye"], ["three", "four"]], dtype=np.dtype('U'))),
+        ("ByteArrayValue", "INT8", np.array([[127, 0, 1], [1, 1, -3]], dtype=np.int8)),
+        ("ShortArrayValue", "INT16", np.array([[135, 234, 7], [5, 1, 2]], dtype=np.int16)),
+        ("IntArrayValue", "INT32", np.array([[135, 234, 7], [6, 1, 2]], dtype=np.int32)),
+        ("LongArrayValue", "INT64", np.array([[135, 234, 4], [7, 1, 2]], dtype=np.int64)),
+        ("FloatArrayValue", "FLOAT", np.array([[3.140000104904175, 0.5, 1.6], [7.5, 1.0, 1.1]], dtype=np.float32)),  # We lack precision when re-creating the Python float from float32.
+        ("DoubleArrayValue", "DOUBLE", np.array([[3.14, 0.5, 788.6], [1.0, 34.56, 1.1]], dtype=np.float64)),
+        ("StringArrayValue", "STRING", np.array([["Hello world! ✓", "Goodbye", "Goodbye2"], ["three", "four", "five"]], dtype=np.dtype('U'))),
     ],
 )
 def test_mapparametervalue_to_datatypevalue__specific_2d_array_types(japc_mock, simple_value_type, expected_type_name, value):
