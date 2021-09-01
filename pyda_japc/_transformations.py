@@ -81,13 +81,15 @@ def MapParameterValue_to_DataTypeValue(param_value: "cern.japc.value.MapParamete
             array_rank = 1
         else:
             array_rank = 0
-        if value_type.isArray() or value_type.isArray2d():
+        if value_type.isArray2d():
             # TODO: Implement this.
             warnings.warn(f'Array support not implemented for {name} (type: {value_type})')
             continue
 
         actual_value = value.getObject()
-        if isinstance(actual_value, str):
+        if array_rank == 1:
+            actual_value = np.array(actual_value)
+        elif isinstance(actual_value, str):
             # JPype already converts java strings to python strings for us.
             pass
         else:
