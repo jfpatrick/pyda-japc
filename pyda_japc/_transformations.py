@@ -1,6 +1,7 @@
 import functools
 import warnings
 
+import jpype
 import jpype as jp
 import typing
 
@@ -71,23 +72,16 @@ def MapParameterValue_to_DataTypeValue(param_value: "cern.japc.value.MapParamete
     # Create a DataTypeValue for the DataType we have just built-up.
     data = dtype.create_empty_value(accepts_partial=True)
 
+    cern = jp.JPackage("cern")
     for name in param_value.getNames():
         value: cern.japc.value.SimpleParameterValue = param_value.get(name)
-        value_type = value.getValueType()
-
-        if value_type.isArray2d():
-            array_rank = 2
-        elif value_type.isArray():
-            array_rank = 1
-        else:
-            array_rank = 0
-        if value_type.isArray() or value_type.isArray2d():
-            # TODO: Implement this.
-            warnings.warn(f'Array support not implemented for {name} (type: {value_type})')
-            continue
-
         actual_value = value.getObject()
-        if isinstance(actual_value, str):
+        if isinstance(actual_value, cern.japc.value.Array2D):
+            actual_value = np.array(actual_value.getArray1D()) \
+                .reshape(actual_value.getRowCount(), actual_value.getColumnCount())
+        elif isinstance(actual_value, jpype.JArray):
+            actual_value = np.array(actual_value)
+        elif isinstance(actual_value, str):
             # JPype already converts java strings to python strings for us.
             pass
         else:

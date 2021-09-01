@@ -1,6 +1,8 @@
 import jpype as jp
 import pyds_model._ds_model as _ds_model  # TODO: No private access.
 import pytest
+import numpy as np
+import numpy.testing
 
 import pyda_japc._transformations as trans
 
@@ -72,3 +74,54 @@ def test_mapparametervalue_to_datatypevalue__specific_types(japc_mock, simple_va
     assert result.get_type('a_name') == expected_type
     assert result['a_name'] == value
 
+
+@pytest.mark.parametrize(
+    ["simple_value_type", "expected_type_name", "value"],
+    [
+        ("BooleanArrayValue", "BOOL", np.array([True, False, True], dtype=np.bool)),
+        ("ByteArrayValue", "INT8", np.array([127, 0, -3], dtype=np.int8)),
+        ("ShortArrayValue", "INT16", np.array([135, 234], dtype=np.int16)),
+        ("IntArrayValue", "INT32", np.array([135, 234], dtype=np.int32)),
+        ("LongArrayValue", "INT64", np.array([135, 234], dtype=np.int64)),
+        ("FloatArrayValue", "FLOAT", np.array([3.140000104904175, 0.5], dtype=np.float32)),  # We lack precision when re-creating the Python float from float32.
+        ("DoubleArrayValue", "DOUBLE", np.array([3.14, 0.5], dtype=np.float64)),
+        ("StringArrayValue", "STRING", np.array(["Hello world! ✓", "Goodbye"], dtype=np.dtype('U'))),
+    ],
+)
+def test_mapparametervalue_to_datatypevalue__specific_1d_array_types(japc_mock, simple_value_type, expected_type_name, value):
+    japc_value = jp.JPackage("cern").japc.value.spi.value
+    jvalue = getattr(japc_value.simple, simple_value_type)(value)
+
+    mpv = japc_mock.mpv(['a_name'], [jvalue])
+    result = trans.MapParameterValue_to_DataTypeValue(mpv)
+    assert isinstance(result, _ds_model.DataTypeValue)
+    assert 'a_name' in result
+    expected_type = getattr(_ds_model.BasicType, expected_type_name)
+    assert result.get_type('a_name') == expected_type
+    numpy.testing.assert_array_equal(result['a_name'], value)
+
+
+@pytest.mark.parametrize(
+    ["simple_value_type", "expected_type_name", "value"],
+    [
+        ("BooleanArrayValue", "BOOL", np.array([[True, False], [False, True]], dtype=np.bool)),
+        ("ByteArrayValue", "INT8", np.array([[127, 0, 1], [1, 1, -3]], dtype=np.int8)),
+        ("ShortArrayValue", "INT16", np.array([[135, 234, 7], [5, 1, 2]], dtype=np.int16)),
+        ("IntArrayValue", "INT32", np.array([[135, 234, 7], [6, 1, 2]], dtype=np.int32)),
+        ("LongArrayValue", "INT64", np.array([[135, 234, 4], [7, 1, 2]], dtype=np.int64)),
+        ("FloatArrayValue", "FLOAT", np.array([[3.140000104904175, 0.5, 1.6], [7.5, 1.0, 1.1]], dtype=np.float32)),  # We lack precision when re-creating the Python float from float32.
+        ("DoubleArrayValue", "DOUBLE", np.array([[3.14, 0.5, 788.6], [1.0, 34.56, 1.1]], dtype=np.float64)),
+        ("StringArrayValue", "STRING", np.array([["Hello world! ✓", "Goodbye", "Goodbye2"], ["three", "four", "five"]], dtype=np.dtype('U'))),
+    ],
+)
+def test_mapparametervalue_to_datatypevalue__specific_2d_array_types(japc_mock, simple_value_type, expected_type_name, value):
+    japc_value = jp.JPackage("cern").japc.value.spi.value
+    jvalue = getattr(japc_value.simple, simple_value_type)(value.flatten(), value.shape)
+
+    mpv = japc_mock.mpv(['a_name'], [jvalue])
+    result = trans.MapParameterValue_to_DataTypeValue(mpv)
+    assert isinstance(result, _ds_model.DataTypeValue)
+    assert 'a_name' in result
+    expected_type = getattr(_ds_model.BasicType, expected_type_name)
+    assert result.get_type('a_name') == expected_type
+    numpy.testing.assert_array_equal(result['a_name'], value)
