@@ -116,7 +116,7 @@ def test_mapparametervalue_to_datatypevalue__specific_1d_array_types(japc_mock, 
 )
 def test_mapparametervalue_to_datatypevalue__specific_2d_array_types(japc_mock, simple_value_type, expected_type_name, value):
     japc_value = jp.JPackage("cern").japc.value.spi.value
-    jvalue = getattr(japc_value.simple, simple_value_type)(value.flatten(), list(value.shape))
+    jvalue = getattr(japc_value.simple, simple_value_type)(value.flatten(), value.shape)
 
     mpv = japc_mock.mpv(['a_name'], [jvalue])
     result = trans.MapParameterValue_to_DataTypeValue(mpv)
