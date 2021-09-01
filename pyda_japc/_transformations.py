@@ -33,6 +33,23 @@ def _ValueTypes_To_BasicTypes() -> typing.Dict["cern.japc.value.ValueType", _ds_
     }
 
 
+@functools.lru_cache()
+def _ValueTypes_To_Array2D_getter() -> typing.Dict["cern.japc.value.ValueType", str]:
+    ValueType = jp.JPackage('cern').japc.value.ValueType
+    return {
+        ValueType.BOOLEAN_ARRAY_2D: "getBooleanArray2D",
+        ValueType.BYTE_ARRAY_2D: "getByteArray2D",
+        ValueType.SHORT_ARRAY_2D: "getShortArray2D",
+        ValueType.INT_ARRAY_2D: "getIntArray2D",
+        ValueType.LONG_ARRAY_2D: "getLongArray2D",
+
+        ValueType.FLOAT_ARRAY_2D: "getFloatArray2D",
+        ValueType.DOUBLE_ARRAY_2D: "getDoubleArray2D",
+
+        ValueType.STRING_ARRAY_2D: "getStringArray2D",
+    }
+
+
 def ValueType_to_BasicType(value_type: "cern.japc.value.ValueType") -> _ds_model.BasicType:
     """
     Get the :class:`pyds_model._ds_model.BasicType` for the given cern.japc.value.ValueType.
@@ -81,19 +98,19 @@ def MapParameterValue_to_DataTypeValue(param_value: "cern.japc.value.MapParamete
             array_rank = 1
         else:
             array_rank = 0
-        if value_type.isArray2d():
-            # TODO: Implement this.
-            warnings.warn(f'Array support not implemented for {name} (type: {value_type})')
-            continue
-
-        actual_value = value.getObject()
-        if array_rank == 1:
+        if array_rank > 1:
+            getter = _ValueTypes_To_Array2D_getter()[value_type]
+            actual_value = getattr(value.getArray2D(), getter)()
             actual_value = np.array(actual_value)
-        elif isinstance(actual_value, str):
-            # JPype already converts java strings to python strings for us.
-            pass
         else:
-            # We need to special case scalars because of https://github.com/jpype-project/jpype/issues/997.
-            actual_value = _jpype_tools.jscalar_to_scalar(actual_value)
+            actual_value = value.getObject()
+            if array_rank > 0:
+                actual_value = np.array(actual_value)
+            elif isinstance(actual_value, str):
+                # JPype already converts java strings to python strings for us.
+                pass
+            else:
+                # We need to special case scalars because of https://github.com/jpype-project/jpype/issues/997.
+                actual_value = _jpype_tools.jscalar_to_scalar(actual_value)
         data[name] = actual_value
     return data
