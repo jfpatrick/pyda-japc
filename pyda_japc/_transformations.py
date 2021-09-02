@@ -6,7 +6,7 @@ import jpype as jp
 import typing
 
 import numpy as np
-import pyds_model._ds_model as _ds_model  # TODO: Only use public classes.
+import pyds_model as model
 
 from . import _jpype_tools
 
@@ -16,9 +16,9 @@ if typing.TYPE_CHECKING:
 
 
 @functools.lru_cache()
-def _ValueTypes_To_BasicTypes() -> typing.Dict["cern.japc.value.ValueType", _ds_model.BasicType]:
+def _ValueTypes_To_BasicTypes() -> typing.Dict["cern.japc.value.ValueType", model.BasicType]:
     ValueType = jp.JPackage('cern').japc.value.ValueType
-    t = _ds_model.BasicType
+    t = model.BasicType
     return {
         ValueType.BOOLEAN: t.BOOL,
 
@@ -34,9 +34,9 @@ def _ValueTypes_To_BasicTypes() -> typing.Dict["cern.japc.value.ValueType", _ds_
     }
 
 
-def ValueType_to_BasicType(value_type: "cern.japc.value.ValueType") -> _ds_model.BasicType:
+def ValueType_to_BasicType(value_type: "cern.japc.value.ValueType") -> model.BasicType:
     """
-    Get the :class:`pyds_model._ds_model.BasicType` for the given cern.japc.value.ValueType.
+    Get the :class:`pyds_model.BasicType` for the given cern.japc.value.ValueType.
 
     Note that ValueType is not a 1-2-1 mapping of BasicType. For example,
     ValueType may contain array/rank info, whereas BasicType does not.
@@ -47,12 +47,12 @@ def ValueType_to_BasicType(value_type: "cern.japc.value.ValueType") -> _ds_model
     return basic_type_lookup[value_type]
 
 
-def MapParameterValue_to_DataTypeValue(param_value: "cern.japc.value.MapParameterValue") -> _ds_model.DataTypeValue:
+def MapParameterValue_to_DataTypeValue(param_value: "cern.japc.value.MapParameterValue") -> model.DataTypeValue:
     # Build a device class and property so that we can get hold of an empty
     # DataType instance (no better way currently).
-    dc = _ds_model.DeviceClass.create('name', '0.1')
+    dc = model.DeviceClass.create('name', '0.1')
     prop = dc.create_acquisition_property('delme')
-    dtype: _ds_model.DataType = prop.data_type
+    dtype: model.DataType = prop.data_type
 
     # Build up the datatype based on the given MapParameterValue types.
     for name in param_value.getNames():

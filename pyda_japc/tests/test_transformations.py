@@ -1,5 +1,5 @@
 import jpype as jp
-import pyds_model._ds_model as _ds_model  # TODO: No private access.
+import pyds_model as model
 import pytest
 import numpy as np
 import numpy.testing
@@ -23,7 +23,7 @@ import pyda_japc._transformations as trans
 def test_value_type_to_basic_type(jvm, input_type_name, output_type_name):
     ValueType = jp.JPackage("cern").japc.value.ValueType
     input_type = getattr(ValueType, input_type_name)
-    output_type = getattr(_ds_model.BasicType, output_type_name)
+    output_type = getattr(model.BasicType, output_type_name)
     assert trans.ValueType_to_BasicType(input_type) == output_type
 
 
@@ -41,11 +41,11 @@ def test_mapparametervalue_to_datatypevalue_multiple_values(japc_mock):
         ]
     )
     result = trans.MapParameterValue_to_DataTypeValue(mpv)
-    assert isinstance(result, _ds_model.DataTypeValue)
+    assert isinstance(result, model.DataTypeValue)
     assert result.keys() == {'a_byte', 'a_short'}
-    assert result.get_type('a_byte') == _ds_model.BasicType.INT8
+    assert result.get_type('a_byte') == model.BasicType.INT8
     assert result['a_byte'] == 127
-    assert result.get_type('a_short') == _ds_model.BasicType.INT16
+    assert result.get_type('a_short') == model.BasicType.INT16
     assert result['a_short'] == 2
 
 
@@ -68,9 +68,9 @@ def test_mapparametervalue_to_datatypevalue__specific_types(japc_mock, simple_va
 
     mpv = japc_mock.mpv(['a_name'], [jvalue])
     result = trans.MapParameterValue_to_DataTypeValue(mpv)
-    assert isinstance(result, _ds_model.DataTypeValue)
+    assert isinstance(result, model.DataTypeValue)
     assert 'a_name' in result
-    expected_type = getattr(_ds_model.BasicType, expected_type_name)
+    expected_type = getattr(model.BasicType, expected_type_name)
     assert result.get_type('a_name') == expected_type
     assert result['a_name'] == value
 
@@ -94,9 +94,9 @@ def test_mapparametervalue_to_datatypevalue__specific_1d_array_types(japc_mock, 
 
     mpv = japc_mock.mpv(['a_name'], [jvalue])
     result = trans.MapParameterValue_to_DataTypeValue(mpv)
-    assert isinstance(result, _ds_model.DataTypeValue)
+    assert isinstance(result, model.DataTypeValue)
     assert 'a_name' in result
-    expected_type = getattr(_ds_model.BasicType, expected_type_name)
+    expected_type = getattr(model.BasicType, expected_type_name)
     assert result.get_type('a_name') == expected_type
     numpy.testing.assert_array_equal(result['a_name'], value)
 
@@ -120,8 +120,8 @@ def test_mapparametervalue_to_datatypevalue__specific_2d_array_types(japc_mock, 
 
     mpv = japc_mock.mpv(['a_name'], [jvalue])
     result = trans.MapParameterValue_to_DataTypeValue(mpv)
-    assert isinstance(result, _ds_model.DataTypeValue)
+    assert isinstance(result, model.DataTypeValue)
     assert 'a_name' in result
-    expected_type = getattr(_ds_model.BasicType, expected_type_name)
+    expected_type = getattr(model.BasicType, expected_type_name)
     assert result.get_type('a_name') == expected_type
     numpy.testing.assert_array_equal(result['a_name'], value)
