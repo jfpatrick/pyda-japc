@@ -8,7 +8,7 @@ import pyda_japc._transformations as trans
 
 
 @pytest.fixture
-def dt():
+def datatype():
     class_ = model.DeviceClass.create("test_class", "0.0.1")
     p = class_.create_acquisition_property("test_prop")
     return p.mutable_data_type
@@ -49,7 +49,7 @@ def test_mapparametervalue_to_datatypevalue_multiple_values(japc_mock):
     )
     result = trans.MapParameterValue_to_DataTypeValue(mpv)
     assert isinstance(result, model.DataTypeValue)
-    assert result.keys() == {'a_byte', 'a_short'}
+    assert sorted(result.keys()) == ['a_byte', 'a_short']
     assert result.get_type('a_byte') == model.BasicType.INT8
     assert result['a_byte'] == 127
     assert result.get_type('a_short') == model.BasicType.INT16
@@ -134,10 +134,10 @@ def test_mapparametervalue_to_datatypevalue__specific_2d_array_types(japc_mock, 
     numpy.testing.assert_array_equal(result['a_name'], value)
 
 
-def test_datatypevalue_mapparametervalue__multiple_values(dt, jvm):
-    dt.create_basic_item("value", model.BasicType.INT64)
-    dt.create_basic_item("another", model.BasicType.BOOL)
-    dtv = dt.create_empty_value()
+def test_datatypevalue_mapparametervalue__multiple_values(datatype, jvm):
+    datatype.create_basic_item("value", model.BasicType.INT64)
+    datatype.create_basic_item("another", model.BasicType.BOOL)
+    dtv = datatype.create_empty_value()
     dtv['value'] = np.int64(112)
     dtv['another'] = False
     result = trans.DataTypeValue_to_MapParameterValue(dtv)
@@ -164,10 +164,10 @@ def test_datatypevalue_mapparametervalue__multiple_values(dt, jvm):
         ("STRING", "STRING", "Hello world! ✓"),
     ],
 )
-def test_datatypevalue_to_mapparametervalue__specific_types(dt, jvm, dsf_type, expected_type_name, value):
+def test_datatypevalue_to_mapparametervalue__specific_types(datatype, jvm, dsf_type, expected_type_name, value):
     basic_type = getattr(model.BasicType, dsf_type)
-    dt.create_basic_item("a_name", basic_type)
-    dtv = dt.create_empty_value()
+    datatype.create_basic_item("a_name", basic_type)
+    dtv = datatype.create_empty_value()
     dtv['a_name'] = value
 
     result = trans.DataTypeValue_to_MapParameterValue(dtv)
@@ -192,10 +192,10 @@ def test_datatypevalue_to_mapparametervalue__specific_types(dt, jvm, dsf_type, e
         ("STRING", "STRING_ARRAY", np.array(["Hello world! ✓", "Goodbye"], dtype=np.dtype('U'))),
     ],
 )
-def test_datatypevalue_to_mapparametervalue__specific_1d_array_types(dt, jvm, dsf_type, expected_type_name, value):
+def test_datatypevalue_to_mapparametervalue__specific_1d_array_types(datatype, jvm, dsf_type, expected_type_name, value):
     basic_type = getattr(model.BasicType, dsf_type)
-    dt.create_basic_item("a_name", basic_type, rank=1)
-    dtv = dt.create_empty_value()
+    datatype.create_basic_item("a_name", basic_type, rank=1)
+    dtv = datatype.create_empty_value()
     dtv['a_name'] = value
 
     result = trans.DataTypeValue_to_MapParameterValue(dtv)
@@ -220,10 +220,10 @@ def test_datatypevalue_to_mapparametervalue__specific_1d_array_types(dt, jvm, ds
         ("STRING", "STRING_ARRAY_2D", np.array([["Hello world! ✓", "Goodbye", "Goodbye2"], ["three", "four", "five"]], dtype=np.dtype('U'))),
     ],
 )
-def test_datatypevalue_to_mapparametervalue__specific_2d_array_types(dt, jvm, dsf_type, expected_type_name, value):
+def test_datatypevalue_to_mapparametervalue__specific_2d_array_types(datatype, jvm, dsf_type, expected_type_name, value):
     basic_type = getattr(model.BasicType, dsf_type)
-    dt.create_basic_item("a_name", basic_type, rank=2)
-    dtv = dt.create_empty_value()
+    datatype.create_basic_item("a_name", basic_type, rank=2)
+    dtv = datatype.create_empty_value()
     dtv['a_name'] = value
 
     result = trans.DataTypeValue_to_MapParameterValue(dtv)

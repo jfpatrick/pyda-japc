@@ -1,10 +1,8 @@
 import functools
+import typing
 import warnings
 
-import jpype
 import jpype as jp
-import typing
-
 import numpy as np
 import pyds_model as model
 
@@ -97,7 +95,7 @@ def MapParameterValue_to_DataTypeValue(param_value: "cern.japc.value.MapParamete
         if isinstance(actual_value, cern.japc.value.Array2D):
             actual_value = np.array(actual_value.getArray1D()) \
                 .reshape(actual_value.getRowCount(), actual_value.getColumnCount())
-        elif isinstance(actual_value, jpype.JArray):
+        elif isinstance(actual_value, jp.JArray):
             actual_value = np.array(actual_value)
         elif isinstance(actual_value, str):
             # JPype already converts java strings to python strings for us.
@@ -116,7 +114,7 @@ def DataTypeValue_to_MapParameterValue(dtv: model.DataTypeValue) -> "cern.japc.v
         basic_type = dtv.get_type(name)
         jp_type = _BasicTypes_to_JPype_Types()[basic_type]
         if isinstance(val, np.ndarray):
-            jarr = jp.JArray(jp_type, 1)(val.flatten())  # FIXME: pyjapc uses .tolist() after flatten, because jpype 0.6 could not process np.arrays, can it now?
+            jarr = jp.JArray(jp_type, 1)(val.flatten())
             if val.ndim == 1:
                 spv = cern.japc.core.factory.SimpleParameterValueFactory.newValue(jarr)
             elif val.ndim == 2:
