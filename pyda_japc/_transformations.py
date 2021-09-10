@@ -1,10 +1,8 @@
 import functools
+import typing
 import warnings
 
-import jpype
 import jpype as jp
-import typing
-
 import numpy as np
 import pyds_model as model
 
@@ -31,6 +29,24 @@ def _ValueTypes_To_BasicTypes() -> typing.Dict["cern.japc.value.ValueType", mode
         ValueType.DOUBLE: t.DOUBLE,
 
         ValueType.STRING: t.STRING,
+    }
+
+
+@functools.lru_cache()
+def _BasicTypes_to_JPype_Types() -> typing.Dict[model.BasicType, typing.Type]:
+    t = model.BasicType
+    return {
+        t.BOOL: jp.JBoolean,
+
+        t.INT8: jp.JByte,
+        t.INT16: jp.JShort,
+        t.INT32: jp.JInt,
+        t.INT64: jp.JLong,
+
+        t.FLOAT: jp.JFloat,
+        t.DOUBLE: jp.JDouble,
+
+        t.STRING: jp.JString,
     }
 
 
@@ -79,7 +95,7 @@ def MapParameterValue_to_DataTypeValue(param_value: "cern.japc.value.MapParamete
         if isinstance(actual_value, cern.japc.value.Array2D):
             actual_value = np.array(actual_value.getArray1D()) \
                 .reshape(actual_value.getRowCount(), actual_value.getColumnCount())
-        elif isinstance(actual_value, jpype.JArray):
+        elif isinstance(actual_value, jp.JArray):
             actual_value = np.array(actual_value)
         elif isinstance(actual_value, str):
             # JPype already converts java strings to python strings for us.
@@ -89,3 +105,25 @@ def MapParameterValue_to_DataTypeValue(param_value: "cern.japc.value.MapParamete
             actual_value = _jpype_tools.jscalar_to_scalar(actual_value)
         data[name] = actual_value
     return data
+
+
+def DataTypeValue_to_MapParameterValue(dtv: model.DataTypeValue) -> "cern.japc.value.MapParameterValue":
+    cern = jp.JPackage("cern")
+    mpv = cern.japc.core.factory.MapParameterValueFactory.newValue()
+    for name, val in dtv.items():
+        basic_type = dtv.get_type(name)
+        jp_type = _BasicTypes_to_JPype_Types()[basic_type]
+        if isinstance(val, np.ndarray):
+            jarr = jp.JArray(jp_type, 1)(val.flatten())
+            if val.ndim == 1:
+                spv = cern.japc.core.factory.SimpleParameterValueFactory.newValue(jarr)
+            elif val.ndim == 2:
+                shape = jp.JArray(jp.JInt)(val.shape)
+                spv = cern.japc.core.factory.SimpleParameterValueFactory.newValue(jarr, shape)
+            else:
+                warnings.warn(f'Unsupported number of dimensions ({val.ndim}) in array "{name}". Won\'t be transformed.')
+        else:
+            jval = jp_type(val)
+            spv = cern.japc.core.factory.SimpleParameterValueFactory.newValue(jval)
+        mpv.put(name, spv)
+    return mpv
