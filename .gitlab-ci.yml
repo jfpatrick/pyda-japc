@@ -21,7 +21,7 @@ variables:
 test_dev:
   extends: .acc_py_dev_test
   stage: test
-  image: condaforge/mambaforge
+  image: registry.cern.ch/docker.io/condaforge/mambaforge
   variables:
     PYTEST_ADDOPTS: "-p no:faulthandler"
   before_script:
