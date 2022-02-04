@@ -22,8 +22,6 @@ test_dev:
   extends: .acc_py_dev_test
   stage: test
   image: registry.cern.ch/acc/acc-py_cc7_openjdk11_ci:2020.11
-  variables:
-    PYTEST_ADDOPTS: "-p no:faulthandler"
   before_script:
     - pip install --find-links=./wheelhouse/ pyds-model
     - pip install -e .[test] pytest-cov
