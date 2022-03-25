@@ -152,23 +152,23 @@ def ValueHeader_to_ctx_notif_pair(
     if not has_selector:
         if set_stamp == 0:
             context = model.AcquisitionContext(
-                acq_stamp=acq_stamp,
+                acquisition_stamp=acq_stamp,
             )
         else:
             context = model.SettingContext(
-                acq_stamp=acq_stamp,
+                acquisition_stamp=acq_stamp,
                 set_stamp=set_stamp,
             )
     else:
         if set_stamp == 0:
             context = model.CycleBoundAcquisitionContext(
-                acq_stamp=acq_stamp,
+                acquisition_stamp=acq_stamp,
                 selector=selector,
                 cycle_stamp=int(header.getCycleStamp()),
             )
         else:
             context = model.MultiplexedSettingContext(
-                acq_stamp=acq_stamp,
+                acquisition_stamp=acq_stamp,
                 selector=selector,
                 set_stamp=set_stamp,
             )
