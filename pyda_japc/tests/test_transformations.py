@@ -277,7 +277,7 @@ def test_valueheader_to_context__SettingImmediateFirstUpdateHeader_cycle_bound_n
     assert notification_type == 'SETTING_UPDATE'
     assert ctx.selector == 'some.selector.here'
     assert ctx.set_stamp == 1322313
-    assert ctx.acq_stamp == 21312
+    assert ctx.acquisition_stamp == 21312
 
 
 def test_valueheader_to_context__AcquisitionRegularUpdateHeader_cycle_bound(jvm):
@@ -307,5 +307,5 @@ def test_acqvalue_to_acqvalue(japc_mock: "cern.japc.ext.mockito.JapcMock"):
     acq = trans.AcquiredParameterValue_to_AcquiredDataTypeValue(j_acq)
     assert isinstance(acq, pyds_model.client.AcquiredDataTypeValue)
     assert acq['value'] == 123
-    assert acq.context.acq_stamp == 21312
+    assert acq.context.acquisition_stamp == 21312
     assert acq.context.selector == 'some.selector.here'
