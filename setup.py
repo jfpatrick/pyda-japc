@@ -17,6 +17,8 @@ with (HERE / 'README.md').open('rt') as fh:
 REQUIREMENTS: dict = {
     'core': [
         'pyds-model',
+        # FIXME: Change this to real package before release
+        'pyda @ git+ssh://git@gitlab.cern.ch:7999/acc-co/devops/python/prototypes/pyda.git#egg=pyda',
         'cmmnbuild-dep-manager~=2.7',
     ],
     'test': [

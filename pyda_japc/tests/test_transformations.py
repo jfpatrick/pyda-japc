@@ -2,7 +2,7 @@ import jpype as jp
 import numpy as np
 import numpy.testing
 import pyds_model as model
-import pyds_model.client
+import pyda.data
 import pytest
 
 import pyda_japc._transformations as trans
@@ -297,15 +297,17 @@ def test_valueheader_to_context__AcquisitionRegularUpdateHeader_cycle_bound_no_s
     assert notification_type == 'SETTING_UPDATE'
 
 
-def test_acqvalue_to_acqvalue(japc_mock: "cern.japc.ext.mockito.JapcMock"):
+def test_acqvalue_to_property_data(japc_mock: "cern.japc.ext.mockito.JapcMock"):
     vhf = jp.JPackage("cern").japc.core.factory.ValueHeaderFactory
 
     param = japc_mock.mockParameter('ff')
     header = vhf.newAcquisitionRegularUpdateHeader(21312, 0, 'some.selector.here')
     j_acq = japc_mock.apv(param, header, 123)
 
-    acq = trans.AcquiredParameterValue_to_AcquiredDataTypeValue(j_acq)
-    assert isinstance(acq, pyds_model.client.AcquiredDataTypeValue)
+    acq, notification_type = trans.AcquiredParameterValue_to_AcquiredPropertyData_notif_pair(j_acq)
+    assert isinstance(acq, pyda.data.AcquiredPropertyData)
     assert acq['value'] == 123
-    assert acq.context.acquisition_stamp == 21312
-    assert acq.context.selector == 'some.selector.here'
+    assert acq.header.acquisition_timestamp == 21312
+    assert acq.header.selector == pyda.data.Selector('some.selector.here')
+    # TODO: This is not true, must be SERVER_UPDATE, but needs another conversion fix
+    assert notification_type == 'SETTING_UPDATE'
