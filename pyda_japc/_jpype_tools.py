@@ -1,4 +1,5 @@
 import functools
+import cmmnbuild_dep_manager
 
 import jpype as jp
 import numpy as np
@@ -26,3 +27,13 @@ def jscalar_to_scalar(scalar_value: jp.JObject) -> np.ndarray:
         raise TypeError(f"Cannot convert Java scalar type {type(scalar_value)} to a Python scalar")
     dtype = SCALAR_TO_DTYPE[type(scalar_value)]
     return dtype(scalar_value)
+
+
+@functools.lru_cache()
+def cern_pkg() -> "cern":
+    mgr = cmmnbuild_dep_manager.Manager()
+    if not mgr.is_resolved():
+        mgr.resolve()
+    if not jp.isJVMStarted():
+        mgr.start_jpype_jvm()
+    return jp.JPackage('cern')

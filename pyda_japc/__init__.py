@@ -19,3 +19,5 @@ __cmmnbuild_deps__ = [
     # {"product": "slf4j-api", "groupId": "org.slf4j"},
     # {"product": "slf4j-log4j12", "groupId": "org.slf4j"},
 ]
+
+from ._provider import JapcProvider
