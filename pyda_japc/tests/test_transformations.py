@@ -28,8 +28,8 @@ def datatype():
         ("STRING", "STRING"),
     ],
 )
-def test_value_type_to_basic_type(jvm, input_type_name, output_type_name):
-    ValueType = jp.JPackage("cern").japc.value.ValueType
+def test_value_type_to_basic_type(cern, input_type_name, output_type_name):
+    ValueType = cern.japc.value.ValueType
     input_type = getattr(ValueType, input_type_name)
     output_type = getattr(model.BasicType, output_type_name)
     assert trans.ValueType_to_BasicType(input_type) == output_type
@@ -40,8 +40,8 @@ def test_value_type_to_basic_type_missing(jvm):
         trans.ValueType_to_BasicType(None)
 
 
-def test_mapparametervalue_to_datatypevalue_multiple_values(japc_mock):
-    japc_value = jp.JPackage("cern").japc.value.spi.value
+def test_mapparametervalue_to_datatypevalue_multiple_values(japc_mock, cern):
+    japc_value = cern.japc.value.spi.value
     mpv = japc_mock.mpv(
         ['a_byte', 'a_short'], [
             japc_value.simple.ByteValue(127),
@@ -70,8 +70,8 @@ def test_mapparametervalue_to_datatypevalue_multiple_values(japc_mock):
         ("StringValue", "STRING", "Hello world! ✓"),
     ],
 )
-def test_mapparametervalue_to_datatypevalue__specific_types(japc_mock, simple_value_type, expected_type_name, value):
-    japc_value = jp.JPackage("cern").japc.value.spi.value
+def test_mapparametervalue_to_datatypevalue__specific_types(japc_mock, cern, simple_value_type, expected_type_name, value):
+    japc_value = cern.japc.value.spi.value
     jvalue = getattr(japc_value.simple, simple_value_type)(value)
 
     mpv = japc_mock.mpv(['a_name'], [jvalue])
@@ -96,8 +96,8 @@ def test_mapparametervalue_to_datatypevalue__specific_types(japc_mock, simple_va
         ("StringArrayValue", "STRING", np.array(["Hello world! ✓", "Goodbye"], dtype=np.dtype('U'))),
     ],
 )
-def test_mapparametervalue_to_datatypevalue__specific_1d_array_types(japc_mock, simple_value_type, expected_type_name, value):
-    japc_value = jp.JPackage("cern").japc.value.spi.value
+def test_mapparametervalue_to_datatypevalue__specific_1d_array_types(japc_mock, cern, simple_value_type, expected_type_name, value):
+    japc_value = cern.japc.value.spi.value
     jvalue = getattr(japc_value.simple, simple_value_type)(value)
 
     mpv = japc_mock.mpv(['a_name'], [jvalue])
@@ -122,8 +122,8 @@ def test_mapparametervalue_to_datatypevalue__specific_1d_array_types(japc_mock, 
         ("StringArrayValue", "STRING", np.array([["Hello world! ✓", "Goodbye", "Goodbye2"], ["three", "four", "five"]], dtype=np.dtype('U'))),
     ],
 )
-def test_mapparametervalue_to_datatypevalue__specific_2d_array_types(japc_mock, simple_value_type, expected_type_name, value):
-    japc_value = jp.JPackage("cern").japc.value.spi.value
+def test_mapparametervalue_to_datatypevalue__specific_2d_array_types(japc_mock, cern, simple_value_type, expected_type_name, value):
+    japc_value = cern.japc.value.spi.value
     jvalue = getattr(japc_value.simple, simple_value_type)(value.flatten(), value.shape)
 
     mpv = japc_mock.mpv(['a_name'], [jvalue])
@@ -135,14 +135,13 @@ def test_mapparametervalue_to_datatypevalue__specific_2d_array_types(japc_mock, 
     numpy.testing.assert_array_equal(result['a_name'], value)
 
 
-def test_datatypevalue_mapparametervalue__multiple_values(datatype, jvm):
+def test_datatypevalue_mapparametervalue__multiple_values(datatype, cern):
     datatype.create_basic_item("value", model.BasicType.INT64)
     datatype.create_basic_item("another", model.BasicType.BOOL)
     dtv = datatype.create_empty_value()
     dtv['value'] = np.int64(112)
     dtv['another'] = False
     result = trans.DataTypeValue_to_MapParameterValue(dtv)
-    cern = jp.JPackage("cern")
     assert isinstance(result, cern.japc.value.MapParameterValue)
     assert result.size() == 2
     assert set(result.getNames()) == {'value', 'another'}
@@ -165,14 +164,13 @@ def test_datatypevalue_mapparametervalue__multiple_values(datatype, jvm):
         ("STRING", "STRING", "Hello world! ✓"),
     ],
 )
-def test_datatypevalue_to_mapparametervalue__specific_types(datatype, jvm, dsf_type, expected_type_name, value):
+def test_datatypevalue_to_mapparametervalue__specific_types(datatype, cern, dsf_type, expected_type_name, value):
     basic_type = getattr(model.BasicType, dsf_type)
     datatype.create_basic_item("a_name", basic_type)
     dtv = datatype.create_empty_value()
     dtv['a_name'] = value
 
     result = trans.DataTypeValue_to_MapParameterValue(dtv)
-    cern = jp.JPackage("cern")
     assert isinstance(result, cern.japc.value.MapParameterValue)
     assert 'a_name' in result.getNames()
     expected_type = getattr(cern.japc.value.ValueType, expected_type_name)
@@ -193,14 +191,13 @@ def test_datatypevalue_to_mapparametervalue__specific_types(datatype, jvm, dsf_t
         ("STRING", "STRING_ARRAY", np.array(["Hello world! ✓", "Goodbye"], dtype=np.dtype('U'))),
     ],
 )
-def test_datatypevalue_to_mapparametervalue__specific_1d_array_types(datatype, jvm, dsf_type, expected_type_name, value):
+def test_datatypevalue_to_mapparametervalue__specific_1d_array_types(datatype, cern, dsf_type, expected_type_name, value):
     basic_type = getattr(model.BasicType, dsf_type)
     datatype.create_basic_item("a_name", basic_type, rank=1)
     dtv = datatype.create_empty_value()
     dtv['a_name'] = value
 
     result = trans.DataTypeValue_to_MapParameterValue(dtv)
-    cern = jp.JPackage("cern")
     assert isinstance(result, cern.japc.value.MapParameterValue)
     assert 'a_name' in result.getNames()
     expected_type = getattr(cern.japc.value.ValueType, expected_type_name)
@@ -221,14 +218,13 @@ def test_datatypevalue_to_mapparametervalue__specific_1d_array_types(datatype, j
         ("STRING", "STRING_ARRAY_2D", np.array([["Hello world! ✓", "Goodbye", "Goodbye2"], ["three", "four", "five"]], dtype=np.dtype('U'))),
     ],
 )
-def test_datatypevalue_to_mapparametervalue__specific_2d_array_types(datatype, jvm, dsf_type, expected_type_name, value):
+def test_datatypevalue_to_mapparametervalue__specific_2d_array_types(datatype, cern, dsf_type, expected_type_name, value):
     basic_type = getattr(model.BasicType, dsf_type)
     datatype.create_basic_item("a_name", basic_type, rank=2)
     dtv = datatype.create_empty_value()
     dtv['a_name'] = value
 
     result = trans.DataTypeValue_to_MapParameterValue(dtv)
-    cern = jp.JPackage("cern")
     assert isinstance(result, cern.japc.value.MapParameterValue)
     assert 'a_name' in result.getNames()
     expected_type = getattr(cern.japc.value.ValueType, expected_type_name)
@@ -245,8 +241,8 @@ def test_datatypevalue_to_mapparametervalue__specific_2d_array_types(datatype, j
         ('', ),
     ],
 )
-def test_valueheader_to_context__SettingImmediateUpdateHeader(jvm, selector):
-    vhf = jp.JPackage("cern").japc.core.factory.ValueHeaderFactory
+def test_valueheader_to_context__SettingImmediateUpdateHeader(cern, selector):
+    vhf = cern.japc.core.factory.ValueHeaderFactory
     header = vhf.newSettingImmediateUpdateHeader(selector)
 
     ctx, notification_type = trans.ValueHeader_to_ctx_notif_pair(header)
@@ -261,16 +257,16 @@ def test_valueheader_to_context__SettingImmediateUpdateHeader(jvm, selector):
             ctx.selector
 
 
-def test_valueheader_to_context__SettingFirstUpdateHeader(jvm):
-    vhf = jp.JPackage("cern").japc.core.factory.ValueHeaderFactory
+def test_valueheader_to_context__SettingFirstUpdateHeader(cern):
+    vhf = cern.japc.core.factory.ValueHeaderFactory
     header = vhf.newSettingFirstUpdateHeader(21312, 13, 'some.selector.here')
     ctx, notification_type = trans.ValueHeader_to_ctx_notif_pair(header)
     assert isinstance(ctx, model.SettingContext)
     assert notification_type == 'FIRST_UPDATE'
 
 
-def test_valueheader_to_context__SettingImmediateFirstUpdateHeader_cycle_bound_no_set(jvm):
-    vhf = jp.JPackage("cern").japc.core.factory.ValueHeaderFactory
+def test_valueheader_to_context__SettingImmediateFirstUpdateHeader_cycle_bound_no_set(cern):
+    vhf = cern.japc.core.factory.ValueHeaderFactory
     header = vhf.newSettingImmediateUpdateHeader(21312, 1322313, 'some.selector.here')
     ctx, notification_type = trans.ValueHeader_to_ctx_notif_pair(header)
     assert isinstance(ctx, model.MultiplexedSettingContext)
@@ -280,8 +276,8 @@ def test_valueheader_to_context__SettingImmediateFirstUpdateHeader_cycle_bound_n
     assert ctx.acquisition_stamp == 21312
 
 
-def test_valueheader_to_context__AcquisitionRegularUpdateHeader_cycle_bound(jvm):
-    vhf = jp.JPackage("cern").japc.core.factory.ValueHeaderFactory
+def test_valueheader_to_context__AcquisitionRegularUpdateHeader_cycle_bound(cern):
+    vhf = cern.japc.core.factory.ValueHeaderFactory
     header = vhf.newAcquisitionRegularUpdateHeader(21312, 123, 'some.selector.here')
     ctx, notification_type = trans.ValueHeader_to_ctx_notif_pair(header)
     assert isinstance(ctx, model.CycleBoundAcquisitionContext)
@@ -289,16 +285,16 @@ def test_valueheader_to_context__AcquisitionRegularUpdateHeader_cycle_bound(jvm)
     assert ctx.cycle_stamp == 123
 
 
-def test_valueheader_to_context__AcquisitionRegularUpdateHeader_cycle_bound_no_set_stamp(jvm):
-    vhf = jp.JPackage("cern").japc.core.factory.ValueHeaderFactory
+def test_valueheader_to_context__AcquisitionRegularUpdateHeader_cycle_bound_no_set_stamp(cern):
+    vhf = cern.japc.core.factory.ValueHeaderFactory
     header = vhf.newAcquisitionRegularUpdateHeader(21312, 0, 'some.selector.here')
     ctx, notification_type = trans.ValueHeader_to_ctx_notif_pair(header)
     assert isinstance(ctx, model.AcquisitionContext)
     assert notification_type == 'SETTING_UPDATE'
 
 
-def test_acqvalue_to_property_data(japc_mock: "cern.japc.ext.mockito.JapcMock"):
-    vhf = jp.JPackage("cern").japc.core.factory.ValueHeaderFactory
+def test_acqvalue_to_property_data(cern, japc_mock: "cern.japc.ext.mockito.JapcMock"):
+    vhf = cern.japc.core.factory.ValueHeaderFactory
 
     param = japc_mock.mockParameter('ff')
     header = vhf.newAcquisitionRegularUpdateHeader(21312, 0, 'some.selector.here')
