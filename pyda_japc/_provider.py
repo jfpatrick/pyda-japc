@@ -6,7 +6,7 @@ import pyda.providers
 import pyda.data
 # TODO: Using private interface, because pyda for
 #  now does not offer complete public API
-import pyda.providers._middleware
+import pyda.providers._core
 
 from . import _transformations
 from . import _jpype_tools
@@ -17,7 +17,7 @@ if typing.TYPE_CHECKING:
     cern = jp.JPackage('cern')
 
 
-class JapcPropertyStream(pyda.providers._middleware.BasePropertyStream):
+class JapcPropertyStream(pyda.providers._core.BasePropertyStream):
 
     def __init__(self, query: "PropertyAccessQuery"):
         super().__init__()
