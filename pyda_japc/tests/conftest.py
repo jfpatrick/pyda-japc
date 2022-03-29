@@ -51,6 +51,7 @@ def japc_mock(jvm, cern):
 
 @pytest.fixture
 def supercycle_mock(japc_mock, cern):
+    # Supercycle mock is needed for testing subscriptions for specific selectors
 
     class SuperCycleContextManager:
 
