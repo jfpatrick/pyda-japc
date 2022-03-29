@@ -13,7 +13,7 @@ from . import _jpype_tools
 
 
 if typing.TYPE_CHECKING:
-    from pyda.data import PropertyAccessQuery
+    from pyda.data import PropertyAccessQuery, PropertyUpdateResponse
     cern = jp.JPackage('cern')
 
 
@@ -54,15 +54,29 @@ class JapcProvider(pyda.providers.BaseProvider):
     def _create_property_stream(self, query: "PropertyAccessQuery"):
         return JapcPropertyStream(query)
 
-    # TODO: SET is not yet available in PyDA
-    # def set(self, device_name, property_name, value, selector):
-    #     # Note that device_name may contain a protocol and service.
-    #     cern = _jpype_tools.cern_pkg()
-    #     mpv = _transformations.DataTypeValue_to_MapParameterValue(value)  # TODO: This should become AnyData_to_MapParameterValue
-    #     factory = param_factory()
-    #     param = factory.newParameter(f'{device_name}/{property_name}')
-    #     selector_j = cern.japc.core.factory.SelectorFactory.newSelector(selector)
-    #     param.setValue(selector_j, mpv)
+    def _set_property(
+            self,
+            query: "PropertyAccessQuery",
+            value: typing.Any,
+    ):
+        # A non-blocking set.
+        future = concurrent.futures.Future()
+
+        param_j = create_param(query)
+        selector_j = create_selector(query)
+
+        # FIXME: This listener probably has to have a different valueReceived implementation
+        #  because the received object from japc is mostly dummy (it returns the same data that
+        #  was set), and we need to produce a
+        #  PropertyUpdateResponse (same type for exception actually)
+        listener_j = create_set_value_listener(query, future.set_result)
+
+        # TODO: This should also be able to convert a simple dictionary
+        #  (or other arbitrary types in future DSF)
+        mpv = _transformations.DataTypeValue_to_MapParameterValue(value)
+
+        param_j.setValue(selector_j, mpv, listener_j)
+        return future
 
 
 def create_param(query: "PropertyAccessQuery"):
@@ -104,6 +118,39 @@ def create_value_listener(query: "PropertyAccessQuery", callback: typing.Callabl
             query=query,
             notification_type=notification_type,
             value=value,
+        )
+        callback(response)
+
+    return jp.JProxy(
+        cern.japc.core.ParameterValueListener,
+        {
+            'exceptionOccured': on_exception,
+            'valueReceived': on_val_recv
+        }
+    )
+
+
+# TODO: Maybe this is not needed at all (if PropertyAccessReponse can be used for SET)?
+def create_set_value_listener(query: "PropertyAccessQuery", callback: typing.Callable[["PropertyUpdateResponse"], None]):
+    cern = _jpype_tools.cern_pkg()
+
+    def on_exception(_, __, exception_j: "cern.japc.core.ParameterException"):
+        try:
+            # FIXME: This is really backwards, but what's the best practice to set __cause__?
+            raise pyda.data.PropertyAccessError(exception_j.getMessage()) from exception_j
+        except pyda.data.PropertyAccessError as error:
+            response = pyda.data.PropertyUpdateResponse(
+                query=query,
+                exception=error,
+            )
+            callback(response)
+
+    def on_val_recv(_, apv_j):
+        selector = apv_j.getHeader().getSelector().getId()
+        header = pyda.data.UpdateHeader(selector)
+        response = pyda.data.PropertyUpdateResponse(
+            query=query,
+            header=header,
         )
         callback(response)
 
