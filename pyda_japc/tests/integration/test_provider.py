@@ -14,7 +14,7 @@ def test__JapcProvider__get_property__value(mock_acq_param, japc_mock, selector)
     provider = pyda_japc.JapcProvider()
     client = pyda.SimpleClient(provider=provider)
     response = client.get(device=dev, prop=prop, selector=selector)
-    assert isinstance(response, pyda.data.PropertyAccessResponse)
+    assert isinstance(response, pyda.data.PropertyRetrievalResponse)
     assert response.value["field1"] == 123
     assert response.value["field2"] == 456
 
@@ -28,7 +28,7 @@ def test__JapcProvider__get_property__exception(mock_acq_param, selector, cern):
     provider = pyda_japc.JapcProvider()
     client = pyda.SimpleClient(provider=provider)
     response = client.get(device=dev, prop=prop, selector=selector)
-    assert isinstance(response, pyda.data.PropertyAccessResponse)
+    assert isinstance(response, pyda.data.PropertyRetrievalResponse)
     assert isinstance(response.exception, pyda.data.PropertyAccessError)
     assert str(response.exception) == "Test error"
     assert isinstance(response.exception.__cause__, cern.japc.core.ParameterException)
@@ -49,7 +49,7 @@ def test__JapcProvider__subscriptions__value(japc_mock, selector, supercycle_moc
         sub.start()
         with sub:
             for response in sub:
-                assert isinstance(response, pyda.data.PropertyAccessResponse)
+                assert isinstance(response, pyda.data.PropertyRetrievalResponse)
                 assert response.value["field1"] == 123
                 assert response.value["field2"] == 456
                 break
@@ -69,7 +69,7 @@ def test__JapcProvider__subscriptions__exception(selector, supercycle_mock, mock
         sub.start()
         with sub:
             for response in sub:
-                assert isinstance(response, pyda.data.PropertyAccessResponse)
+                assert isinstance(response, pyda.data.PropertyRetrievalResponse)
                 assert isinstance(response.exception, pyda.data.PropertyAccessError)
                 assert str(response.exception) == "Test error"
                 assert isinstance(response.exception.__cause__, cern.japc.core.ParameterException)

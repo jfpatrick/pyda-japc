@@ -82,7 +82,7 @@ def create_selector(query: "PropertyAccessQuery"):
     return cern.japc.core.factory.SelectorFactory.newSelector(str(query.selector))
 
 
-def create_value_listener(query: "PropertyAccessQuery", callback: typing.Callable[["PropertyAccessResponse"], None]):
+def create_value_listener(query: "PropertyAccessQuery", callback: typing.Callable[["PropertyRetrievalResponse"], None]):
     cern = _jpype_tools.cern_pkg()
 
     def on_exception(_, __, exception_j: "cern.japc.core.ParameterException"):
@@ -91,7 +91,7 @@ def create_value_listener(query: "PropertyAccessQuery", callback: typing.Callabl
             # FIXME: This is really backwards, but what's the best practice to set __cause__?
             raise pyda.data.PropertyAccessError(exception_j.getMessage()) from exception_j
         except pyda.data.PropertyAccessError as error:
-            response = pyda.data.PropertyAccessResponse(
+            response = pyda.data.PropertyRetrievalResponse(
                 query=query,
                 notification_type=notification_type,
                 exception=error,
@@ -100,7 +100,7 @@ def create_value_listener(query: "PropertyAccessQuery", callback: typing.Callabl
 
     def on_val_recv(_, apv_j):
         value, notification_type = _transformations.AcquiredParameterValue_to_AcquiredPropertyData_notif_pair(apv_j)
-        response = pyda.data.PropertyAccessResponse(
+        response = pyda.data.PropertyRetrievalResponse(
             query=query,
             notification_type=notification_type,
             value=value,
