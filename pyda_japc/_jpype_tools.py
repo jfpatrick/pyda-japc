@@ -32,8 +32,5 @@ def jscalar_to_scalar(scalar_value: jp.JObject) -> np.ndarray:
 @functools.lru_cache()
 def cern_pkg() -> "cern":
     mgr = cmmnbuild_dep_manager.Manager()
-    if not mgr.is_resolved():
-        mgr.resolve()
-    if not jp.isJVMStarted():
-        mgr.start_jpype_jvm()
+    mgr.jvm_required()
     return jp.JPackage('cern')
