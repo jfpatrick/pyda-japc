@@ -48,6 +48,7 @@ def japc_mock(jvm, cern):
         yield mock
     finally:
         mock.resetToDefault()
+        mock.mockNoService()
 
 
 @pytest.fixture
