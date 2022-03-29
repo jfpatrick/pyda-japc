@@ -1,4 +1,5 @@
 import cmmnbuild_dep_manager
+import contextlib
 import jpype as jp
 import pytest
 from pyda_japc import _jpype_tools
@@ -53,20 +54,15 @@ def japc_mock(jvm, cern):
 def supercycle_mock(japc_mock, cern):
     # Supercycle mock is needed for testing subscriptions for specific selectors
 
-    class SuperCycleContextManager:
+    @contextlib.contextmanager
+    def _wrapper(selector: str):
+        cycle_id = selector or cern.japc.core.Selectors.NO_SELECTOR.getId()
+        supercycle = japc_mock.newSuperCycle(cern.japc.ext.mockito.Cycle(cycle_id, 1000))
+        supercycle.start()
+        yield
+        supercycle.stop()
 
-        def __init__(self, selector: str):
-            super().__init__()
-            self.cycle_id = selector or cern.japc.core.Selectors.NO_SELECTOR.getId()
-
-        def __enter__(self):
-            self.supercycle = japc_mock.newSuperCycle(cern.japc.ext.mockito.Cycle(self.cycle_id, 1000))
-            self.supercycle.start()
-
-        def __exit__(self, exc_type, exc_val, exc_tb):
-            self.supercycle.stop()
-
-    return SuperCycleContextManager
+    return _wrapper
 
 
 @pytest.fixture
