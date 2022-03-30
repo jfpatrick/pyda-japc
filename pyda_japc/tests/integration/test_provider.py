@@ -1,3 +1,4 @@
+import jpype as jp
 import pytest
 import pyda
 import pyda.data
@@ -77,35 +78,50 @@ def test__JapcProvider__subscriptions__exception(selector, supercycle_mock, mock
                 break
 
 
-# TODO: For the future, when SET is implemented
-# @pytest.mark.parametrize("selector", ["", "TEST.USER.ALL"])
-# def test_set(japc_mock, selector):
-#     dev = "MockedDevice"
-#     prop = "MockedProperty"
-#     param = japc_mock.mockParameter(f"{dev}/{prop}")
-#     org = jpype.JPackage("org")
-#     input_val = model.AnyData.create()
-#     input_val["field1"] = "one"
-#     input_val["field2"] = "two"
-#     expected_mpv = japc_mock.mpv(["field1", "field2"], ["one", "two"])
-#     expected_sel = japc_mock.sel(selector)
-#     api.set(dev, prop, input_val, selector)
-#     org.mockito.Mockito.verify(param).setValue(expected_sel, expected_mpv)
-#
-# 
-# @pytest.mark.parametrize("selector", ["", "TEST.USER.ALL"])
-# def test_set_invalid(japc_mock, selector, cern):
-#     dev = "MockedDevice"
-#     prop = "MockedProperty"
-#     param = japc_mock.mockParameter(f"{dev}/{prop}")
-#     org = jpype.JPackage("org")
-#     org.mockito.Mockito.doThrow(japc_mock.pe("Test error")) \
-#         .when(param) \
-#         .setValue(cern.japc.ext.mockito.JapcMatchers.anySelector(),
-#                   cern.japc.ext.mockito.JapcMatchers.anyParameterValue())
-#     input_val = model.AnyData.create()
-#     input_val["field1"] = "one"
-#     input_val["field2"] = "two"
-#     with pytest.raises(cern.japc.core.ParameterException) as e:
-#         api.set(dev, prop, input_val, selector)
-#         assert e.getMessage() == "Test error"
+@pytest.mark.parametrize("selector", ["", "TEST.USER.ALL"])
+def test__JapcProvider__set(japc_mock, selector, setting_data_type_value):
+    dev = "MockedDevice"
+    prop = "MockedProperty"
+    param = japc_mock.mockParameter(f"{dev}/{prop}")
+    org = jp.JPackage("org")
+    input_val = setting_data_type_value(selector)
+    input_val["field1"] = "one"
+    input_val["field2"] = "two"
+    expected_mpv = japc_mock.mpv(["field1", "field2"], ["one", "two"])
+    expected_sel = japc_mock.sel(selector)
+
+    provider = pyda_japc.JapcProvider()
+    client = pyda.SimpleClient(provider=provider)
+
+    response = client.set(device=dev, prop=prop, selector=selector, value=input_val)
+    org.mockito.Mockito.verify(param).setValue(expected_sel, expected_mpv)
+    assert isinstance(response, pyda.data.PropertyUpdateResponse)
+    # TODO: Current implementation does not include value. Needs discussion
+    # assert response.value["field1"] == "one"
+    # assert response.value["field2"] == "two"
+
+
+@pytest.mark.parametrize("selector", ["", "TEST.USER.ALL"])
+def test__JapcProvider__set_exception(japc_mock, selector, cern, setting_data_type_value):
+    dev = "MockedDevice"
+    prop = "MockedProperty"
+    param = japc_mock.mockParameter(f"{dev}/{prop}")
+    org = jp.JPackage("org")
+    # TODO: Do a better selector matcher
+    org.mockito.Mockito.doThrow(japc_mock.pe("Test error")) \
+        .when(param) \
+        .setValue(cern.japc.ext.mockito.JapcMatchers.anySelector(),
+                  cern.japc.ext.mockito.JapcMatchers.anyParameterValue())
+    input_val = setting_data_type_value(selector)
+    input_val["field1"] = "one"
+    input_val["field2"] = "two"
+
+    provider = pyda_japc.JapcProvider()
+    client = pyda.SimpleClient(provider=provider)
+
+    response = client.set(device=dev, prop=prop, selector=selector, value=input_val)
+    assert isinstance(response, pyda.data.PropertyUpdateResponse)
+    assert isinstance(response.exception, pyda.data.PropertyAccessError)
+    assert str(response.exception) == "Test error"
+    assert isinstance(response.exception.__cause__, cern.japc.core.ParameterException)
+    assert response.exception.__cause__.getMessage() == "Test error"

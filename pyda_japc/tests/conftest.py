@@ -2,6 +2,7 @@ import cmmnbuild_dep_manager
 import contextlib
 import jpype as jp
 import pytest
+import pyds_model
 from pyda_japc import _jpype_tools
 
 
@@ -106,3 +107,17 @@ def mock_acq_param(japc_mock, cern):
         return param
 
     return wrapper
+
+
+@pytest.fixture
+def setting_data_type_value():
+    # TODO: This fixture is here to overcome inconveniences of DSF
+    #  should be fixed in the future if DSF is improved
+    device_class = pyds_model.DeviceClass.create("test_class", "0.0.1")
+
+    def _wrapper(selector: str):
+        prop = device_class.create_setting_property("test_prop", multiplexed=bool(selector))
+        dtv = prop.data_type.create_empty_value()
+        return dtv
+
+    return _wrapper
