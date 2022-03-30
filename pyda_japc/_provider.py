@@ -102,7 +102,9 @@ def create_value_listener(query: "PropertyAccessQuery", callback: typing.Callabl
     def on_exception(_, __, exception_j: "cern.japc.core.ParameterException"):
         _, notification_type = _transformations.ValueHeader_to_ctx_notif_pair(exception_j.getHeader())
         try:
-            # FIXME: This is really backwards, but what's the best practice to set __cause__?
+            # Raise a ``PropertyAccessError``, and then immediately catch it and present it to the ``PropertyUpdateResponse``.
+            # TODO: Investigate if there is a better way to construct an exception with a correct
+            #  ``__cause__`` without having to try & except like this.
             raise pyda.data.PropertyAccessError(exception_j.getMessage()) from exception_j
         except pyda.data.PropertyAccessError as error:
             response = pyda.data.PropertyRetrievalResponse(
@@ -136,7 +138,9 @@ def create_set_value_listener(query: "PropertyAccessQuery", callback: typing.Cal
 
     def on_exception(_, __, exception_j: "cern.japc.core.ParameterException"):
         try:
-            # FIXME: This is really backwards, but what's the best practice to set __cause__?
+            # Raise a ``PropertyAccessError``, and then immediately catch it and present it to the ``PropertyUpdateResponse``.
+            # TODO: Investigate if there is a better way to construct an exception with a correct
+            #  ``__cause__`` without having to try & except like this.
             raise pyda.data.PropertyAccessError(exception_j.getMessage()) from exception_j
         except pyda.data.PropertyAccessError as error:
             response = pyda.data.PropertyUpdateResponse(
