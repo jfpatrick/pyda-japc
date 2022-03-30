@@ -48,6 +48,7 @@ def japc_mock(jvm, cern):
         yield mock
     finally:
         mock.resetToDefault()
+        mock.mockNoService()
 
 
 @pytest.fixture
@@ -59,8 +60,10 @@ def supercycle_mock(japc_mock, cern):
         cycle_id = selector or cern.japc.core.Selectors.NO_SELECTOR.getId()
         supercycle = japc_mock.newSuperCycle(cern.japc.ext.mockito.Cycle(cycle_id, 1000))
         supercycle.start()
-        yield
-        supercycle.stop()
+        try:
+            yield
+        finally:
+            supercycle.stop()
 
     return _wrapper
 
