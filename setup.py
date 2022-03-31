@@ -17,10 +17,10 @@ with (HERE / 'README.md').open('rt') as fh:
 
 REQUIREMENTS: dict = {
     'core': [
-        'pyds-model',
         'pyda',
+        'pyds-model',
         'pyrbac',
-        'cmmnbuild-dep-manager~=2.7',
+        'cmmnbuild-dep-manager~=2.9',
     ],
     'test': [
         'pytest',

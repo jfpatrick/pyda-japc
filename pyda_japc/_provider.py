@@ -101,6 +101,7 @@ class JapcProvider(pyda.providers.BaseProvider):
     ):
         # A non-blocking set.
         future = concurrent.futures.Future()
+        value = self._prepare_value_for_set(query, value)
 
         param_j = create_param(query)
         selector_j = create_selector(query)
@@ -113,6 +114,7 @@ class JapcProvider(pyda.providers.BaseProvider):
 
         # TODO: This should also be able to convert a simple dictionary
         #  (or other arbitrary types in future DSF)
+        # NOTE: value at this point could also be an AnyData.
         mpv = _transformations.DataTypeValue_to_MapParameterValue(value)
 
         param_j.setValue(selector_j, mpv, listener_j)
