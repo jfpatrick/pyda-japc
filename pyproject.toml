@@ -1,2 +1,10 @@
 [tool.pytest.ini_options]
 addopts = "-p no:faulthandler"
+
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
+
+[tool.setuptools_scm]
+write_to = "pyda_japc/_version.py"
+local_scheme = "no-local-version"
+
