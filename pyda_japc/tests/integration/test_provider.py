@@ -1,4 +1,5 @@
 import jpype as jp
+import numpy as np
 import pytest
 import pyda
 import pyda.data
@@ -76,6 +77,24 @@ def test__JapcProvider__subscriptions__exception(selector, supercycle_mock, mock
                 assert isinstance(response.exception.__cause__, cern.japc.core.ParameterException)
                 assert response.exception.__cause__.getMessage() == "Test error"
                 break
+
+
+@pytest.mark.parametrize("selector", ["", "TEST.USER.ALL"])
+def test__JapcProvider__set_pure_python(japc_mock, selector):
+    dev = "MockedDevice"
+    prop = "MockedProperty"
+    param = japc_mock.mockParameter(f"{dev}/{prop}")
+    org = jp.JPackage("org")
+    input_val = {'field1': "one", "field2": np.int8(2), "field3": 3.14}
+    expected_mpv = japc_mock.mpv(["field1", "field2", "field3"], ["one", jp.JByte(2), 3.14])
+    expected_sel = japc_mock.sel(selector)
+
+    provider = pyda_japc.JapcProvider()
+    client = pyda.SimpleClient(provider=provider)
+
+    response = client.set(device=dev, prop=prop, selector=selector, value=input_val)
+    org.mockito.Mockito.verify(param).setValue(expected_sel, expected_mpv)
+    assert isinstance(response, pyda.data.PropertyUpdateResponse)
 
 
 @pytest.mark.parametrize("selector", ["", "TEST.USER.ALL"])
