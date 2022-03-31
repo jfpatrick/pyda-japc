@@ -4,6 +4,7 @@ import jpype as jp
 import concurrent.futures
 import pyda.providers
 import pyda.data
+import pyrbac
 # TODO: Using private interface, because pyda for
 #  now does not offer complete public API
 import pyda.providers._core
@@ -39,6 +40,35 @@ class JapcPropertyStream(pyda.providers._core.BasePropertyStream):
 
 
 class JapcProvider(pyda.providers.BaseProvider):
+
+    def __init__(self, *, rbac_token: typing.Union[pyrbac.Token, bytes, None] = None):
+        super().__init__()
+        self.rbac_token = rbac_token
+
+    @property
+    def rbac_token(self) -> typing.Optional[pyrbac.Token]:
+        token_holder = get_token_holder()
+        token_j = token_holder.getRbaToken()
+        if token_j is None:
+            return None
+        return pyrbac.Token(token_j.getEncoded())
+
+    @rbac_token.setter
+    def rbac_token(self, new_token: typing.Union[pyrbac.Token, bytes, None]):
+        token_holder = get_token_holder()
+        if new_token is None:
+            token_holder.clear()
+            return
+        buffer: bytes = (new_token.get_encoded()
+                         if isinstance(new_token, pyrbac.Token) else new_token)
+        try:
+            token_j = token_from_bytes(buffer)
+        except Exception as e:  # noqa: B902
+            # Can fail, e.g. with error
+            # cern.rbac.common.TokenFormatException:
+            # Token's signature is invalid - only tokens issued by the RBAC <RBAC_ENV> Server are accepted.
+            raise ValueError("pyrbac Token cannot be converted to Java") from e
+        token_holder.setRbaToken(token_j)
 
     def _get_property(self, query: "PropertyAccessQuery"):
         # A non-blocking get.
@@ -77,6 +107,17 @@ class JapcProvider(pyda.providers.BaseProvider):
 
         param_j.setValue(selector_j, mpv, listener_j)
         return future
+
+
+def token_from_bytes(buffer: bytes):
+    cern = _jpype_tools.cern_pkg()
+    java = jp.java
+    return cern.rbac.common.RbaToken.parseAndValidate(java.nio.ByteBuffer.wrap(buffer))
+
+
+def get_token_holder():
+    cern = _jpype_tools.cern_pkg()
+    return cern.rbac.util.holder.ClientTierTokenHolder
 
 
 def create_param(query: "PropertyAccessQuery"):
