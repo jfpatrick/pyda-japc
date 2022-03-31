@@ -67,8 +67,7 @@ class JapcProvider(pyda.providers.BaseProvider):
             # Can fail, e.g. with error
             # cern.rbac.common.TokenFormatException:
             # Token's signature is invalid - only tokens issued by the RBAC <RBAC_ENV> Server are accepted.
-            # TODO: Should we wrap this error into a Python error? Or just let it pass through?
-            return
+            raise ValueError("pyrbac Token cannot be converted to Java") from e
         token_holder.setRbaToken(token_j)
 
     def _get_property(self, query: "PropertyAccessQuery"):
