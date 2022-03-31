@@ -49,3 +49,10 @@ def test_sets_empty_token_after_creation():
 #     provider = pyda_japc.JapcProvider()
 #     assert provider.rbac_token is not None
 #     assert provider.rbac_token.get_encoded() == buffer
+#
+#
+# def test_getter_token_reflects_java(cern, token_bytes):
+#     buffer = token_bytes("rbaguest")
+#     provider = pyda_japc.JapcProvider(rbac_token=buffer)
+#     bytes_j = cern.rbac.util.holder.ClientTierTokenHolder.getRbaToken().getEncoded()
+#     assert provider.rbac_token.get_encoded() == bytes(bytes_j)
