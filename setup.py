@@ -7,6 +7,7 @@ https://packaging.python.org/guides/distributing-packages-using-setuptools/
 """
 from pathlib import Path
 from setuptools import setup, find_packages
+from setuptools_scm import get_version
 
 
 HERE = Path(__file__).parent.absolute()
@@ -17,9 +18,8 @@ with (HERE / 'README.md').open('rt') as fh:
 REQUIREMENTS: dict = {
     'core': [
         'pyds-model',
+        'pyda',
         'pyrbac',
-        # FIXME: Change this to real package before release
-        'pyda @ git+ssh://git@gitlab.cern.ch:7999/acc-co/devops/python/prototypes/pyda.git#egg=pyda',
         'cmmnbuild-dep-manager~=2.7',
     ],
     'test': [
@@ -30,18 +30,22 @@ REQUIREMENTS: dict = {
     ],
 }
 
+# Get the version from setuptools_scm using the same scheme defined
+# in pyproject.toml. Note that we use a no-local-version scheme
+# (where versions are defined as "X.Y.Z.devN[+local-scheme]") so that
+# the entry-point follows a valid entry-point specification as per
+# https://packaging.python.org/specifications/entry-points/.
+VERSION = get_version(local_scheme="no-local-version")
 
-VERSION = "0.0.1.dev0"
 setup(
     name='pyda-japc',
-    version=VERSION,
 
-    author='Phil Elson',
-    author_email='philip.elson@cern.ch',
-    description='SHORT DESCRIPTION OF PROJECT',
+    author='Acc-Py team',
+    author_email='acc-python-support@cern.ch',
+    description='A JAPC provider for PyDA',
     long_description=LONG_DESCRIPTION,
     long_description_content_type='text/markdown',
-    url='',
+    url='https://gitlab.cern.ch/acc-co/devops/python/prototypes/pyda',
 
     packages=find_packages(),
     python_requires='~=3.7',
