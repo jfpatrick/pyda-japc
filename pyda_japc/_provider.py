@@ -41,9 +41,16 @@ class JapcPropertyStream(pyda.providers._core.BasePropertyStream):
 
 class JapcProvider(pyda.providers.BaseProvider):
 
-    def __init__(self, *, rbac_token: typing.Union[pyrbac.Token, bytes, None] = None):
+    def __init__(
+            self,
+            *,
+            rbac_token: typing.Union[pyrbac.Token, bytes, None] = None,
+            incaify: bool = False,
+    ):
         super().__init__()
         self.rbac_token = rbac_token
+        if incaify:
+            enable_inca()
 
     @property
     def rbac_token(self) -> typing.Optional[pyrbac.Token]:
@@ -107,6 +114,13 @@ class JapcProvider(pyda.providers.BaseProvider):
 
         param_j.setValue(selector_j, mpv, listener_j)
         return future
+
+
+def enable_inca():
+    ic = _jpype_tools.cern_pkg().japc.ext.inca.IncaConfigurator
+    if ic.isConfigured():
+        return
+    ic.configure()
 
 
 def token_from_bytes(buffer: bytes):
