@@ -45,12 +45,15 @@ class JapcProvider(pyda.providers.BaseProvider):
             self,
             *,
             rbac_token: typing.Union[pyrbac.Token, bytes, None] = None,
-            incaify: bool = False,
+            # For now people can "from pyda_japc._provider import enable_inca" to achieve this
+            # incaify: bool = False,  # TODO: Think of a proper interface to enable IncA in the future
     ):
         super().__init__()
         self.rbac_token = rbac_token
-        if incaify:
-            enable_inca()
+
+        # TODO: In the future, this must become a singleton (due to inca one-timeness)
+        # if incaify:
+        #     enable_inca()
 
     @property
     def rbac_token(self) -> typing.Optional[pyrbac.Token]:
