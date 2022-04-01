@@ -143,7 +143,6 @@ def get_token_holder():
 
 
 def create_param(query: "PropertyAccessQuery"):
-    cern = _jpype_tools.cern_pkg()
     factory = param_factory()
     param = factory.newParameter(f'{query.device}/{query.prop}')
     return param
