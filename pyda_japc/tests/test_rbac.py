@@ -93,3 +93,14 @@ def test_getter_token_reflects_java(cern, token_bytes):
     provider = pyda_japc.JapcProvider(rbac_token=token_bytes)
     bytes_j = cern.rbac.util.holder.ClientTierTokenHolder.getRbaToken().getEncoded()
     assert provider.rbac_token.get_encoded() == bytes(bytes_j)
+    # Check that original token has not been affected
+    assert cern.rbac.util.holder.ClientTierTokenHolder.getRbaToken().getUser().getName() == "rbaguest"
+
+
+def test_sets_initializing_with_none_token_clears_java(token_bytes, cern):
+    buffer_j = jp.java.nio.ByteBuffer.wrap(token_bytes)
+    token_j = cern.rbac.common.RbaToken.parseNoValidate(buffer_j)
+    cern.rbac.util.holder.ClientTierTokenHolder.setRbaToken(token_j)
+    assert cern.rbac.util.holder.ClientTierTokenHolder.getRbaToken().getUser().getName() == "rbaguest"
+    _ = pyda_japc.JapcProvider(rbac_token=None)
+    assert cern.rbac.util.holder.ClientTierTokenHolder.getRbaToken() is None
