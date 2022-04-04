@@ -39,17 +39,20 @@ class JapcPropertyStream(pyda.providers._core.BasePropertyStream):
         super().stop(stream_handler)
 
 
+_SKIP_TOKEN = object()
+
 class JapcProvider(pyda.providers.BaseProvider):
 
     def __init__(
             self,
             *,
-            rbac_token: typing.Union[pyrbac.Token, bytes, None] = None,
+            rbac_token: typing.Union[pyrbac.Token, bytes, None] = _SKIP_TOKEN,
             # For now people can "from pyda_japc._provider import enable_inca" to achieve this
             # incaify: bool = False,  # TODO: Think of a proper interface to enable IncA in the future
     ):
         super().__init__()
-        self.rbac_token = rbac_token
+        if rbac_token is not _SKIP_TOKEN:
+            self.rbac_token = rbac_token
 
         # TODO: In the future, this must become a singleton (due to inca one-timeness)
         # if incaify:
@@ -140,7 +143,6 @@ def get_token_holder():
 
 
 def create_param(query: "PropertyAccessQuery"):
-    cern = _jpype_tools.cern_pkg()
     factory = param_factory()
     param = factory.newParameter(f'{query.device}/{query.prop}')
     return param
