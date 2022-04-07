@@ -113,7 +113,7 @@ def mock_acq_param(japc_mock, cern):
 def setting_data_type_value():
     # TODO: This fixture is here to overcome inconveniences of DSF
     #  should be fixed in the future if DSF is improved
-    device_class = pyds_model.DeviceClass.create("test_class", "0.0.1")
+    device_class = pyds_model.DeviceClass.create(name="test_class", version="0.0.1")
 
     def _wrapper(selector: str):
         prop = device_class.create_setting_property("test_prop", multiplexed=bool(selector))

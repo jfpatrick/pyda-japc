@@ -10,7 +10,7 @@ import pyda_japc._transformations as trans
 
 @pytest.fixture
 def datatype():
-    class_ = model.DeviceClass.create("test_class", "0.0.1")
+    class_ = model.DeviceClass.create(name="test_class", version="0.0.1")
     p = class_.create_acquisition_property("test_prop")
     return p.mutable_data_type
 
@@ -136,8 +136,8 @@ def test_mapparametervalue_to_datatypevalue__specific_2d_array_types(japc_mock, 
 
 
 def test_datatypevalue_mapparametervalue__multiple_values(datatype, cern):
-    datatype.create_basic_item("value", model.BasicType.INT64)
-    datatype.create_basic_item("another", model.BasicType.BOOL)
+    datatype.create_basic_item("value", type=model.BasicType.INT64)
+    datatype.create_basic_item("another", type=model.BasicType.BOOL)
     dtv = datatype.create_empty_value()
     dtv['value'] = np.int64(112)
     dtv['another'] = False
@@ -166,7 +166,7 @@ def test_datatypevalue_mapparametervalue__multiple_values(datatype, cern):
 )
 def test_datatypevalue_to_mapparametervalue__specific_types(datatype, cern, dsf_type, expected_type_name, value):
     basic_type = getattr(model.BasicType, dsf_type)
-    datatype.create_basic_item("a_name", basic_type)
+    datatype.create_basic_item("a_name", type=basic_type)
     dtv = datatype.create_empty_value()
     dtv['a_name'] = value
 
@@ -193,7 +193,7 @@ def test_datatypevalue_to_mapparametervalue__specific_types(datatype, cern, dsf_
 )
 def test_datatypevalue_to_mapparametervalue__specific_1d_array_types(datatype, cern, dsf_type, expected_type_name, value):
     basic_type = getattr(model.BasicType, dsf_type)
-    datatype.create_basic_item("a_name", basic_type, rank=1)
+    datatype.create_basic_item("a_name", type=basic_type, rank=1)
     dtv = datatype.create_empty_value()
     dtv['a_name'] = value
 
@@ -220,7 +220,7 @@ def test_datatypevalue_to_mapparametervalue__specific_1d_array_types(datatype, c
 )
 def test_datatypevalue_to_mapparametervalue__specific_2d_array_types(datatype, cern, dsf_type, expected_type_name, value):
     basic_type = getattr(model.BasicType, dsf_type)
-    datatype.create_basic_item("a_name", basic_type, rank=2)
+    datatype.create_basic_item("a_name", type=basic_type, rank=2)
     dtv = datatype.create_empty_value()
     dtv['a_name'] = value
 

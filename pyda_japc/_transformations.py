@@ -67,7 +67,7 @@ def ValueType_to_BasicType(value_type: "cern.japc.value.ValueType") -> model.Bas
 def MapParameterValue_to_DataTypeValue(param_value: "cern.japc.value.MapParameterValue") -> model.DataTypeValue:
     # Build a device class and property so that we can get hold of an empty
     # DataType instance (no better way currently).
-    dc = model.DeviceClass.create('name', '0.1')
+    dc = model.DeviceClass.create(name='name', version='0.1')
     prop = dc.create_acquisition_property('delme')
     dtype: model.DataType = prop.data_type
 
@@ -84,7 +84,7 @@ def MapParameterValue_to_DataTypeValue(param_value: "cern.japc.value.MapParamete
             array_rank = 0
 
         basic_type = ValueType_to_BasicType(value_type.getComponentType())
-        dtype.create_basic_item(name, basic_type, rank=array_rank)
+        dtype.create_basic_item(name, type=basic_type, rank=array_rank)
 
     # Create a DataTypeValue for the DataType we have just built-up.
     # TODO: How to determine partial-ness. Is that entirely from CCDB?
