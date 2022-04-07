@@ -16,11 +16,6 @@ variables:
     value: "master"
     description: "The ref to use from $ACCSOFT_DS_MODEL_REPO to test against."
 
-.init_sequence: &init_sequence
-  - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.cern.ch".insteadOf ssh://git@gitlab.cern.ch:7999
-
-before_script:
-  - *init_sequence
 
 # A development installation of pyda-japc tested with pytest.
 test_dev:
@@ -28,9 +23,11 @@ test_dev:
   stage: test
   image: registry.cern.ch/acc/acc-py_cc7_openjdk11_ci:2020.11
   before_script:
-    - *init_sequence
-    - pip install --find-links=./wheelhouse/ pyds-model
-    - pip install -e .[test] pytest-cov
+    # Find the suitable wheel provided in the wheelhouse directory, and put it in a ./wheel-to-install directory.
+    - python -m pip wheel pyds-model --no-deps --no-index --find-links ./wheelhouse --wheel-dir ./wheel-to-install
+    # Install the wheel that was found (and all dependencies via the package index).
+    - python -m pip install ./wheel-to-install/*.whl
+    - python -m pip install -e .[test] pytest-cov
   needs:
     - project: "${ACCSOFT_DS_MODEL_REPO}"
       job: build_wheel
