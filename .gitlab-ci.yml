@@ -4,6 +4,7 @@ include:
  - project: acc-co/devops/python/acc-py-devtools
    file: acc_py_devtools/templates/gitlab-ci/python.yml
 
+
 variables:
   project_name: pyda_japc
   PY_VERSION: '3.7'
@@ -16,25 +17,77 @@ variables:
     value: "master"
     description: "The ref to use from $ACCSOFT_DS_MODEL_REPO to test against."
 
+  PYDA_CORE_REPO:
+    value: "acc-co/devops/python/prototypes/pyda"
+    description: "The repo project name for the core pyda library"
 
-# A development installation of pyda-japc tested with pytest.
-test_dev:
-  extends: .acc_py_dev_test
-  stage: test
-  image: registry.cern.ch/acc/acc-py_cc7_openjdk11_ci:2020.11
+  PYDA_CORE_REF:
+    value: "master"
+    description: "The ref to use from PYDA_CORE_REPO to test against."
+
+
+build_wheel:
+  extends: .acc_py_build_wheel
+
+
+.external_deps:
   before_script:
     # Find the suitable wheel provided in the wheelhouse directory, and put it in a ./wheel-to-install directory.
-    - python -m pip wheel pyds-model --no-deps --no-index --find-links ./wheelhouse --wheel-dir ./wheel-to-install
-    # Install the wheel that was found (and all dependencies via the package index).
-    - python -m pip install ./wheel-to-install/*.whl
-    - python -m pip install -e .[test] pytest-cov
+    - python -m pip wheel --no-deps --no-index --find-links ./wheelhouse --wheel-dir ./wheels-to-install
+        pyda pyds-model
   needs:
     - project: "${ACCSOFT_DS_MODEL_REPO}"
       job: build_wheel
       ref: "${ACCSOFT_DS_MODEL_REF}"
       artifacts: true
+    - project: "${PYDA_CORE_REPO}"
+      job: build_wheel
+      ref: "${PYDA_CORE_REF}"
+      artifacts: true
+
+
+# A development installation of pyda-japc tested with pytest.
+test_dev:
+  extends:
+    - .acc_py_dev_test
+    - .external_deps
+  stage: test
+  image: registry.cern.ch/acc/acc-py_cc7_openjdk11_ci:2020.11
+  before_script:
+    - !reference [.external_deps, before_script]
+    # Install the wheel that was found (and all dependencies via the package index),
+    # this project (with test dependencies) and coverage functionality.
+    # Doing this as a single install command will ensure that if the project pins
+    # versions which are incompatible with the upstream versions, the command will fail.
+    - python -m pip install
+        ./wheels-to-install/*.whl
+        -e .[test]
+        pytest-cov
+
+
+test_wheel:
+  extends:
+    - .acc_py_wheel_test
+    - .external_deps
+  stage: test
+  image: registry.cern.ch/acc/acc-py_cc7_openjdk11:2020.11
+  needs:
+    - !reference [.external_deps, needs]
+    - build_wheel
+  before_script:
+    - !reference [.external_deps, before_script]
+    # Extract the wheel of *this* package which we need to install.
+    - python -m pip wheel --no-deps --no-index --find-links ./wheelhouse --wheel-dir ./wheel-to-install
+          pyda-japc
+    - python -m pip install
+        ./wheels-to-install/*.whl
+        $(ls -A ./wheel-to-install/*.whl)[test]
 
 
 # A push of the source distribution to the acc-py PyPI, only on git tag.
 release_sdist_on_tag:
   extends: .acc_py_release_sdist
+
+
+release_wheel:
+  extends: .acc_py_release_wheel
